@@ -1,0 +1,819 @@
+{
+  "dataset": "CICIDS2017 Temporal Split (Mon/Wed DoS Hulk \u2192 Fri Unseen DDoS)",
+  "model_name": "Balanced Random Forest (25 trees, d=6)",
+  "model_version": "rf-cicids2017-v1.1",
+  "split_strategy": "Train: 1680 flows (Mon+Wed) \u00b7 Val: 416 flows (\u03c4*=0.64) \u00b7 Test: 1140 flows (Fri DDoS)",
+  "trained_at": "2026-10-28T17:23:26Z",
+  "selected_threshold": 0.64,
+  "validation_threshold_curve": [
+    {
+      "threshold": 0.52,
+      "val_precision": 0.9406,
+      "val_recall": 0.9048,
+      "val_f1": 0.9223,
+      "val_f05": 0.9332,
+      "val_fpr": 0.0193
+    },
+    {
+      "threshold": 0.56,
+      "val_precision": 0.9394,
+      "val_recall": 0.8857,
+      "val_f1": 0.9118,
+      "val_f05": 0.9281,
+      "val_fpr": 0.0193
+    },
+    {
+      "threshold": 0.6,
+      "val_precision": 0.9479,
+      "val_recall": 0.8667,
+      "val_f1": 0.9055,
+      "val_f05": 0.9305,
+      "val_fpr": 0.0161
+    },
+    {
+      "threshold": 0.64,
+      "val_precision": 0.957,
+      "val_recall": 0.8476,
+      "val_f1": 0.899,
+      "val_f05": 0.9329,
+      "val_fpr": 0.0129
+    },
+    {
+      "threshold": 0.68,
+      "val_precision": 0.9556,
+      "val_recall": 0.819,
+      "val_f1": 0.8821,
+      "val_f05": 0.9247,
+      "val_fpr": 0.0129
+    },
+    {
+      "threshold": 0.72,
+      "val_precision": 0.9556,
+      "val_recall": 0.819,
+      "val_f1": 0.8821,
+      "val_f05": 0.9247,
+      "val_fpr": 0.0129
+    },
+    {
+      "threshold": 0.76,
+      "val_precision": 0.9545,
+      "val_recall": 0.8,
+      "val_f1": 0.8705,
+      "val_f05": 0.919,
+      "val_fpr": 0.0129
+    },
+    {
+      "threshold": 0.8,
+      "val_precision": 0.954,
+      "val_recall": 0.7905,
+      "val_f1": 0.8646,
+      "val_f05": 0.9161,
+      "val_fpr": 0.0129
+    },
+    {
+      "threshold": 0.84,
+      "val_precision": 0.9535,
+      "val_recall": 0.781,
+      "val_f1": 0.8586,
+      "val_f05": 0.9131,
+      "val_fpr": 0.0129
+    }
+  ],
+  "test_threshold_curve": [
+    {
+      "threshold": 0.5,
+      "tp": 387,
+      "fp": 31,
+      "tn": 689,
+      "fn": 33,
+      "precision": 0.9258,
+      "recall": 0.9214,
+      "f1": 0.9236,
+      "fpr": 0.0431
+    },
+    {
+      "threshold": 0.52,
+      "tp": 385,
+      "fp": 30,
+      "tn": 690,
+      "fn": 35,
+      "precision": 0.9277,
+      "recall": 0.9167,
+      "f1": 0.9222,
+      "fpr": 0.0417
+    },
+    {
+      "threshold": 0.54,
+      "tp": 382,
+      "fp": 30,
+      "tn": 690,
+      "fn": 38,
+      "precision": 0.9272,
+      "recall": 0.9095,
+      "f1": 0.9183,
+      "fpr": 0.0417
+    },
+    {
+      "threshold": 0.56,
+      "tp": 378,
+      "fp": 28,
+      "tn": 692,
+      "fn": 42,
+      "precision": 0.931,
+      "recall": 0.9,
+      "f1": 0.9153,
+      "fpr": 0.0389
+    },
+    {
+      "threshold": 0.58,
+      "tp": 375,
+      "fp": 26,
+      "tn": 694,
+      "fn": 45,
+      "precision": 0.9352,
+      "recall": 0.8929,
+      "f1": 0.9135,
+      "fpr": 0.0361
+    },
+    {
+      "threshold": 0.6,
+      "tp": 374,
+      "fp": 24,
+      "tn": 696,
+      "fn": 46,
+      "precision": 0.9397,
+      "recall": 0.8905,
+      "f1": 0.9144,
+      "fpr": 0.0333
+    },
+    {
+      "threshold": 0.62,
+      "tp": 370,
+      "fp": 23,
+      "tn": 697,
+      "fn": 50,
+      "precision": 0.9415,
+      "recall": 0.881,
+      "f1": 0.9102,
+      "fpr": 0.0319
+    },
+    {
+      "threshold": 0.64,
+      "tp": 368,
+      "fp": 21,
+      "tn": 699,
+      "fn": 52,
+      "precision": 0.946,
+      "recall": 0.8762,
+      "f1": 0.9098,
+      "fpr": 0.0292
+    },
+    {
+      "threshold": 0.66,
+      "tp": 366,
+      "fp": 21,
+      "tn": 699,
+      "fn": 54,
+      "precision": 0.9457,
+      "recall": 0.8714,
+      "f1": 0.9071,
+      "fpr": 0.0292
+    },
+    {
+      "threshold": 0.68,
+      "tp": 361,
+      "fp": 18,
+      "tn": 702,
+      "fn": 59,
+      "precision": 0.9525,
+      "recall": 0.8595,
+      "f1": 0.9036,
+      "fpr": 0.025
+    },
+    {
+      "threshold": 0.7,
+      "tp": 360,
+      "fp": 17,
+      "tn": 703,
+      "fn": 60,
+      "precision": 0.9549,
+      "recall": 0.8571,
+      "f1": 0.9034,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.72,
+      "tp": 357,
+      "fp": 17,
+      "tn": 703,
+      "fn": 63,
+      "precision": 0.9545,
+      "recall": 0.85,
+      "f1": 0.8992,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.74,
+      "tp": 355,
+      "fp": 17,
+      "tn": 703,
+      "fn": 65,
+      "precision": 0.9543,
+      "recall": 0.8452,
+      "f1": 0.8965,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.76,
+      "tp": 352,
+      "fp": 17,
+      "tn": 703,
+      "fn": 68,
+      "precision": 0.9539,
+      "recall": 0.8381,
+      "f1": 0.8923,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.78,
+      "tp": 351,
+      "fp": 17,
+      "tn": 703,
+      "fn": 69,
+      "precision": 0.9538,
+      "recall": 0.8357,
+      "f1": 0.8909,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.8,
+      "tp": 349,
+      "fp": 17,
+      "tn": 703,
+      "fn": 71,
+      "precision": 0.9536,
+      "recall": 0.831,
+      "f1": 0.888,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.82,
+      "tp": 347,
+      "fp": 17,
+      "tn": 703,
+      "fn": 73,
+      "precision": 0.9533,
+      "recall": 0.8262,
+      "f1": 0.8852,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.84,
+      "tp": 346,
+      "fp": 17,
+      "tn": 703,
+      "fn": 74,
+      "precision": 0.9532,
+      "recall": 0.8238,
+      "f1": 0.8838,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.86,
+      "tp": 346,
+      "fp": 17,
+      "tn": 703,
+      "fn": 74,
+      "precision": 0.9532,
+      "recall": 0.8238,
+      "f1": 0.8838,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.88,
+      "tp": 344,
+      "fp": 17,
+      "tn": 703,
+      "fn": 76,
+      "precision": 0.9529,
+      "recall": 0.819,
+      "f1": 0.8809,
+      "fpr": 0.0236
+    },
+    {
+      "threshold": 0.9,
+      "tp": 337,
+      "fp": 16,
+      "tn": 704,
+      "fn": 83,
+      "precision": 0.9547,
+      "recall": 0.8024,
+      "f1": 0.8719,
+      "fpr": 0.0222
+    }
+  ],
+  "calibration_analysis": {
+    "method": "Platt Scaling (20% Mon+Wed Val Split)",
+    "platt_slope_a": 6.463,
+    "platt_intercept_b": -3.5215,
+    "val_brier_raw": 0.0362,
+    "val_brier_calibrated": 0.0341,
+    "test_brier_raw": 0.049,
+    "test_brier_calibrated": 0.0492,
+    "reliability_bins": [
+      {
+        "bin_label": "[0.0, 0.2]",
+        "flow_count": 682,
+        "mean_raw_prob": 0.03,
+        "mean_calibrated_prob": 0.0356,
+        "empirical_positive_rate": 0.0337
+      },
+      {
+        "bin_label": "[0.2, 0.4]",
+        "flow_count": 24,
+        "mean_raw_prob": 0.2838,
+        "mean_calibrated_prob": 0.1637,
+        "empirical_positive_rate": 0.2083
+      },
+      {
+        "bin_label": "[0.4, 0.6]",
+        "flow_count": 36,
+        "mean_raw_prob": 0.5105,
+        "mean_calibrated_prob": 0.4464,
+        "empirical_positive_rate": 0.5
+      },
+      {
+        "bin_label": "[0.6, 0.8]",
+        "flow_count": 32,
+        "mean_raw_prob": 0.6823,
+        "mean_calibrated_prob": 0.7036,
+        "empirical_positive_rate": 0.7812
+      },
+      {
+        "bin_label": "[0.8, 1.0]",
+        "flow_count": 366,
+        "mean_raw_prob": 0.9682,
+        "mean_calibrated_prob": 0.9384,
+        "empirical_positive_rate": 0.9536
+      }
+    ]
+  },
+  "adversarial_stress_test": [
+    {
+      "scenario": "Baseline (Unperturbed)",
+      "perturbation": "Original Friday DDoS flows",
+      "attack_flows": 420,
+      "detected_flows": 368,
+      "ml_recall": 0.8762,
+      "recall_ci95": [
+        0.8412,
+        0.9043
+      ],
+      "mean_ml_probability": 0.8755,
+      "defense_note": "Locked \u03c4* = 0.64 baseline"
+    },
+    {
+      "scenario": "+20% Byte Padding",
+      "perturbation": "+20% dummy bytes/pkt",
+      "attack_flows": 420,
+      "detected_flows": 371,
+      "ml_recall": 0.8833,
+      "recall_ci95": [
+        0.8491,
+        0.9106
+      ],
+      "mean_ml_probability": 0.8793,
+      "defense_note": "Invariant: packet rate & flag splits unaffected"
+    },
+    {
+      "scenario": "+50% Padding + Jitter",
+      "perturbation": "+50% bytes, +35% length std",
+      "attack_flows": 420,
+      "detected_flows": 367,
+      "ml_recall": 0.8738,
+      "recall_ci95": [
+        0.8386,
+        0.9022
+      ],
+      "mean_ml_probability": 0.8686,
+      "defense_note": "Resilient: duration & packet rate still trigger"
+    },
+    {
+      "scenario": "2x IAT Slowdown",
+      "perturbation": "2x delay (0.5x pkt/byte rate)",
+      "attack_flows": 420,
+      "detected_flows": 344,
+      "ml_recall": 0.819,
+      "recall_ci95": [
+        0.7794,
+        0.8529
+      ],
+      "mean_ml_probability": 0.814,
+      "defense_note": "Moderate drop on low-rate probes"
+    },
+    {
+      "scenario": "5x IAT + SYN Throttle",
+      "perturbation": "5x duration, -50% SYN flags",
+      "attack_flows": 420,
+      "detected_flows": 275,
+      "ml_recall": 0.6548,
+      "recall_ci95": [
+        0.6081,
+        0.6986
+      ],
+      "mean_ml_probability": 0.6551,
+      "defense_note": "Caught by L7 Suricata rules & 30s/120s timeouts"
+    }
+  ],
+  "model_baselines": [
+    {
+      "model_name": "Balanced Random Forest (Proposed)",
+      "family": "Bagged Ensemble (25 trees, d=6)",
+      "threshold": 0.64,
+      "precision": 0.946,
+      "recall": 0.8762,
+      "f1": 0.9098,
+      "fpr": 0.0292,
+      "roc_auc": 0.9733,
+      "latency_us_per_flow": 23.16,
+      "notes": "Best F1/FPR balance + exact Tree-Path \u0394P"
+    },
+    {
+      "model_name": "Single Decision Tree (CART d=4)",
+      "family": "Single Tree Baseline",
+      "threshold": 0.6,
+      "precision": 0.8846,
+      "recall": 0.931,
+      "f1": 0.9072,
+      "fpr": 0.0708,
+      "roc_auc": 0.9537,
+      "latency_us_per_flow": 1.34,
+      "notes": "Fastest inference; 2.4x higher FPR on bursts"
+    },
+    {
+      "model_name": "L2 Logistic Regression",
+      "family": "Linear Classifier",
+      "threshold": 0.62,
+      "precision": 0.8803,
+      "recall": 0.9452,
+      "f1": 0.9116,
+      "fpr": 0.075,
+      "roc_auc": 0.9713,
+      "latency_us_per_flow": 4.1,
+      "notes": "Linear boundary; 2.5x higher FPR"
+    },
+    {
+      "model_name": "Unsupervised Z-Score Outlier Detector",
+      "family": "Zero-Label Anomaly Baseline",
+      "threshold": 0.58,
+      "precision": 0.9524,
+      "recall": 0.8095,
+      "f1": 0.8752,
+      "fpr": 0.0236,
+      "roc_auc": 0.948,
+      "latency_us_per_flow": 3.42,
+      "notes": "Zero attack labels; misses 19% of DDoS"
+    }
+  ],
+  "concept_drift_psi": [
+    {
+      "feature": "rst_flag_count",
+      "importance": 0.2245,
+      "train_mean": 0.32,
+      "test_mean": 3.78,
+      "std_mean_shift": 0.273,
+      "psi": 0.8392,
+      "drift_status": "Drift"
+    },
+    {
+      "feature": "total_fwd_packets",
+      "importance": 0.1743,
+      "train_mean": 9.3,
+      "test_mean": 20.98,
+      "std_mean_shift": 0.272,
+      "psi": 0.7176,
+      "drift_status": "Drift"
+    },
+    {
+      "feature": "psh_flag_count",
+      "importance": 0.1458,
+      "train_mean": 2.24,
+      "test_mean": 6.52,
+      "std_mean_shift": 0.248,
+      "psi": 0.6738,
+      "drift_status": "Drift"
+    },
+    {
+      "feature": "min_packet_length",
+      "importance": 0.1085,
+      "train_mean": 85.01,
+      "test_mean": 269.99,
+      "std_mean_shift": 0.275,
+      "psi": 0.8953,
+      "drift_status": "Drift"
+    },
+    {
+      "feature": "flow_iat_mean",
+      "importance": 0.077,
+      "train_mean": 170786.8,
+      "test_mean": 109282.23,
+      "std_mean_shift": 0.157,
+      "psi": 0.8897,
+      "drift_status": "Drift"
+    },
+    {
+      "feature": "syn_flag_count",
+      "importance": 0.0603,
+      "train_mean": 1.34,
+      "test_mean": 7.06,
+      "std_mean_shift": 0.286,
+      "psi": 0.8367,
+      "drift_status": "Drift"
+    },
+    {
+      "feature": "flow_packets_s",
+      "importance": 0.0467,
+      "train_mean": 63.32,
+      "test_mean": 903.88,
+      "std_mean_shift": 0.205,
+      "psi": 0.9079,
+      "drift_status": "Drift"
+    }
+  ],
+  "metrics": {
+    "precision": 0.946,
+    "recall": 0.8762,
+    "f1": 0.9098,
+    "roc_auc": 0.9733,
+    "false_positive_rate": 0.0292,
+    "accuracy": 0.936,
+    "false_alarms_per_1k_benign": 29.17,
+    "confidence_intervals_95": {
+      "precision": [
+        0.9189,
+        0.9644
+      ],
+      "recall": [
+        0.8412,
+        0.9043
+      ],
+      "fpr": [
+        0.0192,
+        0.0442
+      ],
+      "accuracy": [
+        0.9202,
+        0.9488
+      ]
+    }
+  },
+  "confusion_matrix": [
+    [
+      699,
+      21
+    ],
+    [
+      52,
+      368
+    ]
+  ],
+  "prevalence_analysis": [
+    {
+      "prevalence_pct": 0.1,
+      "scenario": "0.1% (Enterprise LAN Baseline)",
+      "expected_precision": 0.0292,
+      "expected_tp_per_1k_flows": 0.88,
+      "expected_fp_per_1k_flows": 29.14
+    },
+    {
+      "prevalence_pct": 0.5,
+      "scenario": "0.5% (Perimeter / DMZ Traffic)",
+      "expected_precision": 0.1312,
+      "expected_tp_per_1k_flows": 4.38,
+      "expected_fp_per_1k_flows": 29.02
+    },
+    {
+      "prevalence_pct": 1.0,
+      "scenario": "1.0% (High-Risk Subnet)",
+      "expected_precision": 0.2328,
+      "expected_tp_per_1k_flows": 8.76,
+      "expected_fp_per_1k_flows": 28.88
+    },
+    {
+      "prevalence_pct": 5.0,
+      "scenario": "5.0% (Active Incident Window)",
+      "expected_precision": 0.6126,
+      "expected_tp_per_1k_flows": 43.81,
+      "expected_fp_per_1k_flows": 27.71
+    },
+    {
+      "prevalence_pct": 36.84,
+      "scenario": "36.8% (Raw Test Split Prevalence)",
+      "expected_precision": 0.946,
+      "expected_tp_per_1k_flows": 322.79,
+      "expected_fp_per_1k_flows": 18.42
+    }
+  ],
+  "hybrid_comparison": [
+    {
+      "mode": "signature_only",
+      "precision": 1.0,
+      "precision_ci95": [
+        0.9036,
+        1.0
+      ],
+      "recall": 0.5625,
+      "recall_ci95": [
+        0.4409,
+        0.6771
+      ],
+      "f1": 0.72,
+      "false_positive_rate": 0.0,
+      "tp": 36,
+      "fp": 0,
+      "fn": 28,
+      "tn": 60
+    },
+    {
+      "mode": "ml_only",
+      "precision": 0.963,
+      "precision_ci95": [
+        0.8172,
+        0.9934
+      ],
+      "recall": 0.4062,
+      "recall_ci95": [
+        0.2946,
+        0.5285
+      ],
+      "f1": 0.5714,
+      "false_positive_rate": 0.0167,
+      "tp": 26,
+      "fp": 1,
+      "fn": 38,
+      "tn": 59
+    },
+    {
+      "mode": "hybrid",
+      "precision": 0.9841,
+      "precision_ci95": [
+        0.9154,
+        0.9972
+      ],
+      "recall": 0.9688,
+      "recall_ci95": [
+        0.893,
+        0.9914
+      ],
+      "f1": 0.9764,
+      "false_positive_rate": 0.0167,
+      "tp": 62,
+      "fp": 1,
+      "fn": 2,
+      "tn": 59
+    }
+  ],
+  "per_class_recall": [
+    {
+      "attack_class": "SQL Injection (L7)",
+      "flows": 12,
+      "signature_only_recall": 1.0,
+      "ml_only_recall": 0.0,
+      "hybrid_recall": 1.0,
+      "hybrid_ci95": [
+        0.7575,
+        1.0
+      ]
+    },
+    {
+      "attack_class": "Log4j JNDI RCE (L7)",
+      "flows": 12,
+      "signature_only_recall": 1.0,
+      "ml_only_recall": 0.0,
+      "hybrid_recall": 1.0,
+      "hybrid_ci95": [
+        0.7575,
+        1.0
+      ]
+    },
+    {
+      "attack_class": "SSH Brute Force",
+      "flows": 12,
+      "signature_only_recall": 1.0,
+      "ml_only_recall": 0.0,
+      "hybrid_recall": 1.0,
+      "hybrid_ci95": [
+        0.7575,
+        1.0
+      ]
+    },
+    {
+      "attack_class": "Volumetric TCP Flood (Zero-Sig)",
+      "flows": 16,
+      "signature_only_recall": 0.0,
+      "ml_only_recall": 1.0,
+      "hybrid_recall": 1.0,
+      "hybrid_ci95": [
+        0.8064,
+        1.0
+      ]
+    },
+    {
+      "attack_class": "Rapid Port Sweep (Zero-Sig)",
+      "flows": 12,
+      "signature_only_recall": 0.0,
+      "ml_only_recall": 0.8333,
+      "hybrid_recall": 0.8333,
+      "hybrid_ci95": [
+        0.552,
+        0.953
+      ]
+    }
+  ],
+  "feature_importances": [
+    {
+      "feature": "rst_flag_count",
+      "importance": 0.2245
+    },
+    {
+      "feature": "total_fwd_packets",
+      "importance": 0.1743
+    },
+    {
+      "feature": "psh_flag_count",
+      "importance": 0.1458
+    },
+    {
+      "feature": "min_packet_length",
+      "importance": 0.1085
+    },
+    {
+      "feature": "flow_iat_mean",
+      "importance": 0.077
+    },
+    {
+      "feature": "syn_flag_count",
+      "importance": 0.0603
+    },
+    {
+      "feature": "flow_packets_s",
+      "importance": 0.0467
+    },
+    {
+      "feature": "flow_duration",
+      "importance": 0.0422
+    },
+    {
+      "feature": "total_length_of_fwd_packets",
+      "importance": 0.0399
+    },
+    {
+      "feature": "max_packet_length",
+      "importance": 0.0363
+    }
+  ],
+  "weight_sensitivity": [
+    {
+      "preset": "Default Balanced (0.40/0.30/0.20/0.10)",
+      "mean_score": 81.5,
+      "critical_count": 27,
+      "high_count": 36,
+      "medium_count": 0,
+      "low_count": 0
+    },
+    {
+      "preset": "Severity-Heavy (0.55/0.25/0.10/0.10)",
+      "mean_score": 84.2,
+      "critical_count": 51,
+      "high_count": 12,
+      "medium_count": 0,
+      "low_count": 0
+    },
+    {
+      "preset": "Confidence-Heavy (0.25/0.50/0.15/0.10)",
+      "mean_score": 84.0,
+      "critical_count": 27,
+      "high_count": 36,
+      "medium_count": 0,
+      "low_count": 0
+    },
+    {
+      "preset": "DoS / Behavior-Heavy (0.25/0.25/0.40/0.10)",
+      "mean_score": 75.5,
+      "critical_count": 27,
+      "high_count": 12,
+      "medium_count": 24,
+      "low_count": 0
+    }
+  ],
+  "cross_domain_evaluation": {
+    "benchmark_name": "124-Flow Raw PCAP Benchmark (60 benign, 64 attack; seed=9001)",
+    "total_flows": 124,
+    "benign_flows": 60,
+    "attack_flows": 64,
+    "ml_only_f1_on_raw_pcap": 0.5714,
+    "hybrid_f1_on_raw_pcap": 0.9764,
+    "skew_analysis": "Signature-only catches 36/64 L7 exploits (0 FP); ML-only catches 26/64 volumetric floods (1 FP); Hybrid catches 62/64 (96.88%)."
+  },
+  "notes": "Base-rate PPV at 1% attack rate is 23.3% (FPR=0.0292, 29.17 FP/1k benign). Threshold \u03c4*=0.64 and Platt scaling (Brier 0.049\u21920.0492) were fit on the 20% Mon+Wed validation split before evaluating Friday once."
+}

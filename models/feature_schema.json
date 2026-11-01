@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Shared flow feature schema computed identically by PCAP flow extractor and CICIDS2017 CSV preprocessor.",
+  "features": [
+    {
+      "name": "destination_port",
+      "cicids_column": "Destination Port",
+      "type": "int",
+      "description": "Destination transport port (0 for ICMP/other)"
+    },
+    {
+      "name": "protocol",
+      "cicids_column": "Protocol",
+      "type": "int",
+      "description": "IP protocol number (6=TCP, 17=UDP, 1=ICMP)",
+      "default_if_missing_in_csv": 6
+    },
+    {
+      "name": "flow_duration",
+      "cicids_column": "Flow Duration",
+      "type": "float",
+      "description": "Duration of the flow in microseconds"
+    },
+    {
+      "name": "total_fwd_packets",
+      "cicids_column": "Total Fwd Packets",
+      "type": "int",
+      "description": "Total packets in the forward direction"
+    },
+    {
+      "name": "total_bwd_packets",
+      "cicids_column": "Total Backward Packets",
+      "type": "int",
+      "description": "Total packets in the backward direction"
+    },
+    {
+      "name": "total_length_of_fwd_packets",
+      "cicids_column": "Total Length of Fwd Packets",
+      "type": "float",
+      "description": "Total byte length of forward packets"
+    },
+    {
+      "name": "total_length_of_bwd_packets",
+      "cicids_column": "Total Length of Bwd Packets",
+      "type": "float",
+      "description": "Total byte length of backward packets"
+    },
+    {
+      "name": "min_packet_length",
+      "cicids_column": "Min Packet Length",
+      "type": "float",
+      "description": "Minimum packet length in the flow"
+    },
+    {
+      "name": "max_packet_length",
+      "cicids_column": "Max Packet Length",
+      "type": "float",
+      "description": "Maximum packet length in the flow"
+    },
+    {
+      "name": "packet_length_mean",
+      "cicids_column": "Packet Length Mean",
+      "type": "float",
+      "description": "Mean packet length in the flow"
+    },
+    {
+      "name": "packet_length_std",
+      "cicids_column": "Packet Length Std",
+      "type": "float",
+      "description": "Standard deviation of packet length in the flow"
+    },
+    {
+      "name": "flow_bytes_s",
+      "cicids_column": "Flow Bytes/s",
+      "type": "float",
+      "description": "Flow byte rate per second"
+    },
+    {
+      "name": "flow_packets_s",
+      "cicids_column": "Flow Packets/s",
+      "type": "float",
+      "description": "Flow packet rate per second"
+    },
+    {
+      "name": "flow_iat_mean",
+      "cicids_column": "Flow IAT Mean",
+      "type": "float",
+      "description": "Mean inter-arrival time between packets in microseconds"
+    },
+    {
+      "name": "fin_flag_count",
+      "cicids_column": "FIN Flag Count",
+      "type": "int",
+      "description": "Number of packets with TCP FIN flag"
+    },
+    {
+      "name": "syn_flag_count",
+      "cicids_column": "SYN Flag Count",
+      "type": "int",
+      "description": "Number of packets with TCP SYN flag"
+    },
+    {
+      "name": "rst_flag_count",
+      "cicids_column": "RST Flag Count",
+      "type": "int",
+      "description": "Number of packets with TCP RST flag"
+    },
+    {
+      "name": "psh_flag_count",
+      "cicids_column": "PSH Flag Count",
+      "type": "int",
+      "description": "Number of packets with TCP PSH flag"
+    },
+    {
+      "name": "ack_flag_count",
+      "cicids_column": "ACK Flag Count",
+      "type": "int",
+      "description": "Number of packets with TCP ACK flag"
+    }
+  ],
+  "label_column": "Label",
+  "benign_label": "BENIGN"
+}

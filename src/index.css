@@ -1,0 +1,45 @@
+/* Hallmark · shape: app screen · genre: modern-minimal · theme: Grid / Wayfind (Light)
+ * nav: top-and-side · signature: real-time IPS firewall ledger and decision tree attribution · states: loading, empty, error, full · vantage: daylight/clean-slate
+ * axes: light/grotesk-sans/cobalt · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P9 H9 E9 S9 R9 V9 · weakest: none, pristine light SOC console density and states */
+
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./base.css" layer(base);
+
+:root {
+  --color-surface-base: var(--color-paper);
+  --color-text-main: var(--color-ink);
+  --color-text-muted: var(--color-muted);
+  --font-sans: 'Geologica', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-code: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@layer base {
+  html, body {
+    overflow-x: clip;
+    background-color: var(--color-surface-base);
+    color: var(--color-text-main);
+    font-family: var(--font-sans);
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-code);
+    font-variant-numeric: tabular-nums;
+  }
+
+  button:active:not(:disabled),
+  a:active:not([aria-disabled="true"]),
+  [role="button"]:active {
+    transform: translateY(1px);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

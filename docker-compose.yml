@@ -1,0 +1,13 @@
+services:
+  suricata:
+    image: jasonish/suricata:latest
+    container_name: hybrid-ids-suricata
+    volumes:
+      - ./samples:/pcap:ro
+      - ./suricata/rules:/var/lib/suricata/rules:ro
+      - ./suricata/logs:/var/log/suricata
+    command: >
+      -r /pcap/attack_signature.pcap
+      -S /var/lib/suricata/rules/local.rules
+      -l /var/log/suricata
+      -k none

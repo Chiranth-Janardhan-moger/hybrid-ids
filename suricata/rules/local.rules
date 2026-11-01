@@ -1,0 +1,12 @@
+# Emerging Threats (ET Open) & Local Intrusion Detection Signatures
+# Format: alert <proto> <src> <sp> -> <dst> <dp> (msg:"..."; content:"..."; sid:...; rev:...; priority:...;)
+
+alert tcp any any -> any any (msg:"ET WEB_SERVER SQL Injection UNION SELECT Attempt"; content:"UNION"; nocase; content:"SELECT"; nocase; classtype:web-application-attack; sid:2010935; rev:4; priority:1;)
+alert tcp any any -> any any (msg:"ET WEB_SERVER SQL Injection OR 1=1 Authentication Bypass"; content:"OR 1=1"; nocase; classtype:web-application-attack; sid:2010936; rev:2; priority:1;)
+alert tcp any any -> any any (msg:"ET EXPLOIT Apache Log4j RCE JNDI LDAP Callback Attempt"; content:"${jndi:"; nocase; classtype:attempted-admin; sid:2034647; rev:3; priority:1;)
+alert tcp any any -> any any (msg:"ET SCAN Nmap Scripting Engine User-Agent Detected"; content:"Nmap Scripting Engine"; nocase; classtype:web-application-activity; sid:2024364; rev:2; priority:2;)
+alert tcp any any -> any 22 (msg:"ET SCAN Potential SSH Brute Force Tool Scan"; content:"OpenSSH_BruteScanner"; nocase; classtype:attempted-recon; sid:2001219; rev:5; priority:2;)
+alert tcp any any -> any any (msg:"ET WEB_SERVER Possible Path Traversal etc/shadow Attempt"; content:"etc/"; nocase; content:"shadow"; nocase; classtype:web-application-attack; sid:2010940; rev:1; priority:1;)
+alert tcp any any -> any any (msg:"ET EXPLOIT OS Command Injection /bin/bash Reverse Shell Attempt"; content:"/bin/bash"; nocase; classtype:attempted-admin; sid:2010941; rev:1; priority:1;)
+alert tcp any any -> any any (msg:"ET WEB_SERVER Cross-Site Scripting <script> Cookie Leak Attempt"; content:"<script"; nocase; content:"document.cookie"; nocase; classtype:web-application-attack; sid:2010942; rev:1; priority:2;)
+alert tcp any any -> any any (msg:"GPL ATTACK_RESPONSE id check returned root"; content:"uid=0(root)"; classtype:bad-unknown; sid:2100498; rev:8; priority:3;)

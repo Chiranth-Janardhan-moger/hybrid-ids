@@ -1,0 +1,53 @@
+# Hybrid Network Intrusion Detection System - Authoritative Configuration Contract
+app:
+  name: "Hybrid IDS"
+  version: "1.2.0"
+  max_upload_mb: 100
+  allowed_extensions:
+    - ".pcap"
+    - ".pcapng"
+  database_path: "data/hybrid_ids.db"
+
+flow_timeouts:
+  active_timeout_sec: 120.0
+  idle_timeout_sec: 30.0
+  campaign_correlation_window_sec: 60.0
+
+suricata:
+  mode: "docker"
+  docker_image: "jasonish/suricata:latest"
+  rules_path: "suricata/rules/local.rules"
+  correlation_time_window_sec: 5.0
+  rule_version: "ET-Open-2026.10-local-v1"
+
+ml:
+  model_path: "models/rf_model.json"
+  joblib_model_path: "models/rf_model.joblib"
+  feature_schema_path: "models/feature_schema.json"
+  evaluation_path: "models/evaluation.json"
+  model_name: "RandomForestClassifier (Balanced)"
+  model_version: "rf-cicids2017-v1.1"
+  probability_threshold: 0.64
+  max_benign_subsample: 200000
+
+risk_scoring:
+  formula: "score = 100 * (w_sev*severity + w_conf*confidence + w_beh*behavior + w_ctx*context)"
+  weights:
+    severity: 0.40
+    confidence: 0.30
+    behavior: 0.20
+    context: 0.10
+  signature_defaults:
+    severity_map:
+      1: 0.95
+      2: 0.68
+      3: 0.36
+      4: 0.18
+    base_confidence: 0.78
+  ml_defaults:
+    base_severity: 0.58
+  categories:
+    low_max: 29
+    medium_max: 59
+    high_max: 79
+    critical_min: 80

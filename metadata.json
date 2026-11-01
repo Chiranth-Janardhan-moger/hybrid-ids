@@ -1,0 +1,6 @@
+{
+  "name": "Hybrid IDS",
+  "description": "Hybrid Network Intrusion Detection System using Signature-Based Detection, Machine Learning, and Risk-Based Threat Prioritization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
