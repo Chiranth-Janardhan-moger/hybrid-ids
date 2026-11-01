@@ -94,7 +94,8 @@ docker compose run --rm suricata
 ```
 
 ### Step 6: Interactive 4-Tier IPS Firewall Visualizer
-Open `visualizer/index.html` (or `visualizer/ips_firewall_visualizer.html`) directly in any web browser to run the standalone 4-layer defense walkthrough with Auto-Play presentation mode, live SVG packet animations, and keyboard shortcuts (`P` for Auto-Play, `B` for Block Mode, `F` for Fullscreen).
+- **Live Online Visualizer**: [https://chiranth-janardhan-moger.github.io/hybrid-ids/](https://chiranth-janardhan-moger.github.io/hybrid-ids/)
+- **Local File**: Open `visualizer/index.html` (or `visualizer/ips_firewall_visualizer.html`) directly in any web browser to run the standalone 4-layer defense walkthrough with Auto-Play presentation mode, live SVG packet animations, and keyboard shortcuts (`P` for Auto-Play, `B` for Block Mode, `F` for Fullscreen).
 
 ### Step 7: Multi-Layer Live Attack Mitigation Simulation
 ```powershell
