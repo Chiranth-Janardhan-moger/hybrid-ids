@@ -74,6 +74,39 @@ npx --yes tsx --test src\lib\pipeline.test.ts
 ```
 
 ### Step 4: Start the Application
+
+#### Option A: Docker (Production Container Image `hybrid-ids:1.0`)
+Build and run the entire unified application (Node.js full-stack server, React frontend, SQLite persistence, and Python ML inference engine) all at once:
+
+```bash
+# Build the Docker image
+docker build -t hybrid-ids:1.0 .
+
+# Run the container with persistent storage and environment configuration
+docker run -d \
+  --name hybrid-ids \
+  -p 3000:3000 \
+  -v ${PWD}/data:/app/data \
+  --env-file .env.example \
+  hybrid-ids:1.0
+```
+
+Or launch via Docker Compose:
+```bash
+# Start the application
+docker compose up -d
+
+# Check health and status
+docker compose ps
+docker compose logs -f hybrid-ids
+```
+
+Once running, access:
+- Dashboard & Alerts UI: `http://localhost:3000`
+- Interactive 4-Tier Visualizer: `http://localhost:3000/visualizer`
+- Health Endpoint: `http://localhost:3000/api/health`
+
+#### Option B: Local PowerShell Development
 You can run the unified full-stack server on port 3000:
 ```powershell
 npm install

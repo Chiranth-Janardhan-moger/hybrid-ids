@@ -22,7 +22,7 @@ import {
   inspectHoneypotTrap,
 } from './src/lib/securityLayers';
 
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const DB_PATH = process.env.HYBRID_IDS_DB || path.resolve(process.cwd(), 'data/hybrid_ids.db');
 const RULES_PATH = process.env.SURICATA_RULES_PATH || path.resolve(process.cwd(), 'suricata/rules/local.rules');
 const MODEL_PATH = process.env.ML_MODEL_PATH || path.resolve(process.cwd(), 'models/rf_model.json');
@@ -1332,6 +1332,12 @@ async function startServer() {
 <div class="ep"><strong>GET</strong> <code>/api/alerts/{id}</code> — Full alert detail & 4-component risk breakdown</div>
 <div class="ep"><strong>GET</strong> <code>/api/evaluation</code> — Held-out CICIDS2017 evaluation metrics & confusion matrix</div>
 </body></html>`);
+  });
+
+  const visualizerPath = path.join(process.cwd(), 'visualizer');
+  app.use('/visualizer', express.static(visualizerPath));
+  app.get('/visualizer', (_req, res) => {
+    res.sendFile(path.join(visualizerPath, 'ips_firewall_visualizer.html'));
   });
 
   if (process.env.NODE_ENV !== 'production') {

