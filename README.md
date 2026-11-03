@@ -106,6 +106,17 @@ Once running, access:
 - Interactive 4-Tier Visualizer: `http://localhost:3000/visualizer`
 - Health Endpoint: `http://localhost:3000/api/health`
 
+#### Automated Docker Hub Builds via GitHub Actions
+A GitHub Actions workflow is provided at `.github/workflows/docker-publish.yml` to automatically build and push `hybrid-ids:1.0` and `hybrid-ids:latest` to Docker Hub.
+
+To enable automated pushes:
+1. In Docker Hub (`hub.docker.com`), navigate to **Account Settings** -> **Security** -> **New Access Token** (generate a token with Read & Write permissions).
+2. In your GitHub repository (`github.com/Chiranth-Janardhan-moger/hybrid-ids`), navigate to **Settings** -> **Secrets and variables** -> **Actions** -> **New repository secret**.
+3. Create two secrets:
+   - `DOCKERHUB_USERNAME`: your Docker Hub username.
+   - `DOCKERHUB_TOKEN`: your Docker Hub Personal Access Token.
+4. Push code to `main` or open the **Actions** tab on GitHub, select **Build and Push to Docker Hub**, and click **Run workflow**.
+
 #### Option B: Local PowerShell Development
 You can run the unified full-stack server on port 3000:
 ```powershell
